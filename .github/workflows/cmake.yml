@@ -46,7 +46,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Install MinGW64 and dependencies
       uses: msys2/setup-msys2@v2
       with:
@@ -57,7 +57,7 @@ jobs:
       run: choco install cmake ninja
     
     - name: CMake build makefile
-      run: cd build; cmake .. -G "MinGW Makefiles"
+      run: mkdir build; cd build; cmake .. -G "MinGW Makefiles"
 
     - name: Build
       run: mingw32-make
