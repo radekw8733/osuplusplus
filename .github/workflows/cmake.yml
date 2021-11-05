@@ -39,8 +39,8 @@ jobs:
     - name: Extract artifact
       uses: actions/upload-artifact@v2
       with:
-        path: osu*.deb
-        
+        path: build/osu*.deb
+
   build-windows:
     runs-on: windows-latest
 
