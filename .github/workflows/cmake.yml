@@ -34,7 +34,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Package into deb package
-      run: cd build; cpack -G DEB
+      run: cd build; cpack -G DEB; mv osu*.deb osureloaded.deb
 
     - name: Extract artifact
       uses: actions/upload-artifact@v2
