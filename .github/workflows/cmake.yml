@@ -53,6 +53,9 @@ jobs:
     - name: Print mingw directories
       run: ls C:\msys64\mingw64\bin; ls C:\msys64\mingw64\include; ls C:\msys64\mingw64\include\SDL2
 
+    - name: Add MinGW to path
+      run: $env:Path += ";C:\msys64\mingw64\bin"
+
     - name: Install CMake and ninja
       run: choco install cmake ninja
     
