@@ -36,7 +36,7 @@ int main(int argc, char* args[]) {
             case START_MENU:
                 if (switchedGameState) {
                     switchedGameState = false;
-                    SDL_Surface *background = IMG_Load("../res/background.jpg");
+                    SDL_Surface *background = IMG_Load("/usr/share/osureloaded/res/background.jpg");
                     SDL_Rect scaleRect;
                     scaleRect.h = screenInfo.h;
                     scaleRect.w = screenInfo.w;
