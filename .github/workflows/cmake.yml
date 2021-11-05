@@ -50,6 +50,9 @@ jobs:
     - name: Install MinGW64 and SDL2
       run: C:\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -S mingw64/mingw-w64-x86_64-SDL2 mingw64/mingw-w64-x86_64-SDL2_image"; cp C:\msys64\mingw64\bin\SDL2* .
 
+    - name: Print mingw directories
+      run: ls C:\msys64\mingw64\bin; ls C:\msys64\mingw64\include; ls C:\msys64\mingw64\include\SDL2
+
     - name: Install CMake and ninja
       run: choco install cmake ninja
     
