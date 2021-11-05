@@ -48,10 +48,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install MinGW64 and dependencies
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_image
+      run: C:\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -S mingw64/mingw-w64-x86_64-SDL2 mingw64/mingw-w64-x86_64-SDL2_image"
 
     - name: Install CMake and ninja
       run: choco install cmake ninja
