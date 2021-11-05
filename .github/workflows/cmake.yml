@@ -41,20 +41,20 @@ jobs:
       with:
         path: build/osu*.deb
 
-  build-windows:
-    runs-on: windows-latest
+  # build-windows:
+  #   runs-on: windows-latest
 
-    steps:
-    - uses: actions/checkout@v2
+  #   steps:
+  #   - uses: actions/checkout@v2
 
-    - name: Install MinGW64 and SDL2
-      run: C:\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -S mingw64/mingw-w64-x86_64-SDL2 mingw64/mingw-w64-x86_64-SDL2_image"
+  #   - name: Install MinGW64 and SDL2
+  #     run: C:\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -S mingw64/mingw-w64-x86_64-SDL2 mingw64/mingw-w64-x86_64-SDL2_image"
 
-    - name: Install CMake and ninja
-      run: choco install cmake ninja
+  #   - name: Install CMake and ninja
+  #     run: choco install cmake ninja
     
-    - name: CMake build makefile
-      run: mkdir build; cd build; cmake .. -G "MinGW Makefiles"
+  #   - name: CMake build makefile
+  #     run: mkdir build; cd build; cmake .. -G "MinGW Makefiles"
 
-    - name: Build
-      run: mingw32-make
+  #   - name: Build
+  #     run: mingw32-make
