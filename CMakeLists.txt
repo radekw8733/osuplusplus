@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
 project(osureloaded)
 find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIRS})
+
+if (MINGW)
+set(SDL2_INCLUDE_DIR "C:/msys64/mingw64/include")
+set(SDL2_LIBRARY_DIR "C:/msys64/mingw64/lib")
+endif (MINGW)
+
+include_directories(${SDL2_INCLUDE_DIR})
 add_executable(osureloaded main.cpp)
 target_link_libraries(osureloaded ${SDL2_LIBRARIES} SDL2_image)
 
