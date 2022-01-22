@@ -8,7 +8,7 @@ endif (WIN32)
 
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
-add_executable(osureloaded main.cpp)
+add_executable(osureloaded src/main.cpp)
 target_link_libraries(osureloaded ${SDL2_LIBRARIES} SDL2_image)
 
 # DEB build
