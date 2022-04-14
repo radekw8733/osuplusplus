@@ -10,8 +10,16 @@ include(CPack)
 
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
-add_executable(osupp src/main.cpp)
-target_link_libraries(osupp ${SDL2_LIBRARIES} SDL2_image)
+
+find_package(Vulkan)
+set(VMA_FILES Vulkan2D/VulkanMemoryAllocator/src/vk_mem_alloc.h Vulkan2D/VulkanMemoryAllocator/src/VmaUsage.cpp)
+file(GLOB VK2D_FILES Vulkan2D/VK2D/*.c)
+include_directories(Vulkan2D)
+
+add_executable(osupp src/main.cpp ${VK2D_FILES} ${VMA_FILES})
+target_link_libraries(osupp ${SDL2_LIBRARIES} SDL2_image ${Vulkan_LIBRARIES})
+
+file(COPY res DESTINATION .)
 
 # DEB build
 if (UNIX)

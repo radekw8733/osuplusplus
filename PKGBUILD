@@ -1,5 +1,5 @@
 # Maintainer: Radosław Wolański <radekw8733@gmail.com>
-pkgname="osureloaded"
+pkgname="osupp"
 pkgver="0.1.0"
 pkgrel=1
 pkgdesc="High performance osu! client written in C++"

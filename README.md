@@ -1,4 +1,4 @@
-# osu!reloaded
+# osu!++
 osu!reloaded is an unofficial client to osu! world. It's built on C++ and SDL2 to bring faster and better latency experience.
 
 ## Roadmap
@@ -6,6 +6,7 @@ osu!reloaded is an unofficial client to osu! world. It's built on C++ and SDL2 t
 - [ ] Basic osu experience required to play game
 - [ ] Animations
 - [ ] Uploading scores to server (maybe even that main)
+- [ ] Custom UI
 
 ## Installing
 

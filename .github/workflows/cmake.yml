@@ -25,8 +25,6 @@ jobs:
       run: sudo apt -y install libsdl2-dev libsdl2-image-dev
 
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
@@ -34,13 +32,13 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Package into deb package
-      run: cd build; cpack -G DEB; mv osu*.deb osureloaded.deb
+      run: cd build; cpack -G DEB; mv osu*.deb osupp.deb
 
     - name: Extract artifact
       uses: actions/upload-artifact@v2
       with:
-        name: osureloaded.deb
-        path: build/osureloaded.deb
+        name: osupp.deb
+        path: build/osupp.deb
 
   # build-windows:
   #   runs-on: windows-latest
