@@ -1,19 +1,21 @@
 cmake_minimum_required(VERSION 3.10)
-project(osureloaded)
+project(osupp)
 
 if (WIN32)
 set(SDL2_INCLUDE_DIR "C:/msys64/mingw64/include")
 set(SDL2_LIBRARY_DIR "C:/msys64/mingw64/lib")
 endif (WIN32)
 
+include(CPack)
+
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
-add_executable(osureloaded src/main.cpp)
-target_link_libraries(osureloaded ${SDL2_LIBRARIES} SDL2_image)
+add_executable(osupp src/main.cpp)
+target_link_libraries(osupp ${SDL2_LIBRARIES} SDL2_image)
 
 # DEB build
 if (UNIX)
-set(CPACK_DEBIAN_PACKAGE_NAME "osureloaded")
+set(CPACK_DEBIAN_PACKAGE_NAME "osupp")
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Unofficial rewrited osu! client built on C++ and SDL2")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl2-dev, libsdl2-image-dev")
 set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
@@ -26,8 +28,6 @@ set(CPACK_PACKAGE_VERSION_MINOR "1")
 set(CPACK_PACKAGE_VERSION_PATCH "0")
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" COMPONENT applications)
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/res DESTINATION "share/osureloaded")
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/res DESTINATION "share/osupp")
 install(FILES ${CMAKE_SOURCE_DIR}/osureloaded.desktop DESTINATION share/applications)
 endif (UNIX)
-
-include(CPack)
