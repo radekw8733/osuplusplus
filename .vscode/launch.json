@@ -8,7 +8,7 @@
             "type": "shell",
             "command": "cd builddir && ninja"
         },
-        "target": "${workspaceFolder}/build/osupp",
+        "program": "${workspaceFolder}/build/osupp",
         "args": [],
         "cwd": "${workspaceFolder}"
     }

@@ -5,11 +5,11 @@ pkgrel=1
 pkgdesc="High performance osu! client written in C++"
 arch=("x86_64")
 makedepends=("sdl2" "sdl2_image" "cmake")
-source=("git+https://github.com/radekw8733/osu-reloaded.git")
+source=("git+https://github.com/radekw8733/osuplusplus.git")
 md5sums=("SKIP")
 
 build() {
-    cd "osu-reloaded"
+    cd "osuplusplus"
     mkdir -p build
     cd build
     cmake ..
@@ -17,6 +17,6 @@ build() {
 }
 
 package() {
-    cd "osu-reloaded/build"
+    cd "osuplusplus/build"
     make DESTDIR="$pkgdir/" install
 }
