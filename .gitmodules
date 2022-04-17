@@ -1,0 +1,3 @@
+[submodule "Acid"]
+	path = Acid
+	url = https://github.com/EQMG/Acid.git
