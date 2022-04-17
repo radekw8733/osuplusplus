@@ -1,27 +1,23 @@
 cmake_minimum_required(VERSION 3.10)
 project(osupp)
+add_compile_definitions(OSUPP_VERSION_MAJOR=0)
+add_compile_definitions(OSUPP_VERSION_MINOR=1)
+add_compile_definitions(OSUPP_VERSION_REVISION=0)
 
-if (WIN32)
-set(SDL2_INCLUDE_DIR "C:/msys64/mingw64/include")
-set(SDL2_LIBRARY_DIR "C:/msys64/mingw64/lib")
-endif (WIN32)
+add_subdirectory(Acid)
 
+set(LIBS Acid) # define our required libraries
+
+file(GLOB_RECURSE osupp_SOURCES "src/*.hpp" "src/*.cpp") # include all source files
+add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp ${osupp_SOURCES}) # compile
+target_link_libraries(${PROJECT_NAME} ${LIBS}) # link
+
+file(COPY res DESTINATION .) # copy our resources to build folder
+
+# PACKAGING
 include(CPack)
 
-find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIR})
-
-find_package(Vulkan)
-set(VMA_FILES Vulkan2D/VulkanMemoryAllocator/src/vk_mem_alloc.h Vulkan2D/VulkanMemoryAllocator/src/VmaUsage.cpp)
-file(GLOB VK2D_FILES Vulkan2D/VK2D/*.c)
-include_directories(Vulkan2D)
-
-add_executable(osupp src/main.cpp ${VK2D_FILES} ${VMA_FILES})
-target_link_libraries(osupp ${SDL2_LIBRARIES} SDL2_image ${Vulkan_LIBRARIES})
-
-file(COPY res DESTINATION .)
-
-# DEB build
+# Debian build
 if (UNIX)
 set(CPACK_DEBIAN_PACKAGE_NAME "osupp")
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Unofficial rewrited osu! client built on C++ and SDL2")
@@ -29,9 +25,9 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl2-dev, libsdl2-image-dev")
 set(CPACK_DEBIAN_FILE_NAME ${CPACK_PACKAGE_NAME})
 set(CPACK_PACKAGE_CONTACT "radekw8733@gmail.com")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Radoslaw Wolanski")
-set(CPACK_PACKAGE_VERSION_MAJOR "0")
-set(CPACK_PACKAGE_VERSION_MINOR "1")
-set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_PACKAGE_VERSION_MAJOR OSUPP_VERSION_MAJOR)
+set(CPACK_PACKAGE_VERSION_MINOR OSUPP_VERSION_MINOR)
+set(CPACK_PACKAGE_VERSION_PATCH OSUPP_VERSION_REVISION)
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" COMPONENT applications)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/res DESTINATION "share/osupp")
