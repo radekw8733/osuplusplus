@@ -1,5 +1,5 @@
 # osu!++ [Pre-alpha] - only use for testing
-osu!++ is an unofficial client to osu! world. It's built using C++, SDL2 and Skia to bring faster and better latency experience using modern graphics APIs.
+osu!++ is an unofficial client to osu! world. It's built using C++ and SFML to bring faster and better latency experience. It's graphics design is also modular so it should be easy to plug it in to other frameworks.
 
 ## Roadmap
 
@@ -32,7 +32,7 @@ sudo apt install ./osureloaded.deb
 ~~So far I only build debian packages~~ so you must build osu reloaded from source.
 Install required dependencies:
 ```
-sudo apt install cmake libsdl2-dev libsdl2-image-dev
+sudo apt install cmake libsfml-dev
 ```
 Then clone repository:
 ```

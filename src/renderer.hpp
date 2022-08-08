@@ -1,13 +1,6 @@
-#include <Graphics/Renderer.hpp>
+#pragma once
 
-using namespace acid;
-
-namespace osuPlusPlus {
-    class GameRenderer : public Renderer {
-        public:
-            GameRenderer();
-
-            void Start() override;
-            void Update() override;
-    };
-}
+class Renderer {
+    public:
+        virtual void setupWindow(const char* windowTitle, unsigned int windowWidth, unsigned int windowHeight) = 0;
+};

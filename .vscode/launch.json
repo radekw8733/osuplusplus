@@ -1,5 +1,14 @@
 {
     "configurations": [
+    {
+        "type": "lldb",
+        "request": "launch",
+        "name": "Launch",
+        "program": "${workspaceFolder}/build/osupp",
+        "args": [],
+        "cwd": "${workspaceFolder}",
+        "preLaunchTask": "Build",
+    },
         {
             "name": "(gdb) Launch",
             "type": "cppdbg",

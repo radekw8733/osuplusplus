@@ -4,13 +4,13 @@ add_compile_definitions(OSUPP_VERSION_MAJOR=0)
 add_compile_definitions(OSUPP_VERSION_MINOR=1)
 add_compile_definitions(OSUPP_VERSION_REVISION=0)
 
-add_subdirectory(Acid)
+find_package(SFML COMPONENTS system window graphics)
 
-set(LIBS Acid) # define our required libraries
+set(LIBS SFML) # define our required libraries
 
-file(GLOB_RECURSE osupp_SOURCES "src/*.hpp" "src/*.cpp") # include all source files
-add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp ${osupp_SOURCES}) # compile
-target_link_libraries(${PROJECT_NAME} ${LIBS}) # link
+file(GLOB SOURCES "src/*.cpp") # include all source files
+add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp ${SOURCES}) # compile
+target_link_libraries(${PROJECT_NAME} sfml-graphics sfml-window sfml-system) # link
 
 file(COPY res DESTINATION .) # copy our resources to build folder
 
@@ -20,8 +20,8 @@ include(CPack)
 # Debian build
 if (UNIX)
 set(CPACK_DEBIAN_PACKAGE_NAME "osupp")
-set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Unofficial rewrited osu! client built on C++ and SDL2")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl2-dev, libsdl2-image-dev")
+set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Unofficial rewrited osu! client built on C++ and SFML")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsfml-dev")
 set(CPACK_DEBIAN_FILE_NAME ${CPACK_PACKAGE_NAME})
 set(CPACK_PACKAGE_CONTACT "radekw8733@gmail.com")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Radoslaw Wolanski")
