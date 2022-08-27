@@ -1,3 +1,3 @@
-[submodule "Acid"]
-	path = Acid
-	url = https://github.com/EQMG/Acid.git
+[submodule "thirdparty/cmrc"]
+	path = thirdparty/cmrc
+	url = https://github.com/vector-of-bool/cmrc
