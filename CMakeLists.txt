@@ -4,13 +4,23 @@ add_compile_definitions(OSUPP_VERSION_MAJOR=0)
 add_compile_definitions(OSUPP_VERSION_MINOR=1)
 add_compile_definitions(OSUPP_VERSION_REVISION=0)
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    add_compile_options (-fdiagnostics-color=always)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    add_compile_options (-fcolor-diagnostics)
+endif ()
+
+
 find_package(SFML COMPONENTS system window graphics)
+include(thirdparty/cmrc/CMakeRC.cmake)
+
+cmrc_add_resource_library(resources res/background.jpg)
 
 set(LIBS SFML) # define our required libraries
 
-file(GLOB SOURCES "src/*.cpp") # include all source files
+file(GLOB SOURCES "src/*.cpp" "src/sfml/*.cpp") # include all source files
 add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp ${SOURCES}) # compile
-target_link_libraries(${PROJECT_NAME} sfml-graphics sfml-window sfml-system) # link
+target_link_libraries(${PROJECT_NAME} sfml-graphics sfml-window sfml-system resources) # link
 
 file(COPY res DESTINATION .) # copy our resources to build folder
 

@@ -1,13 +1,17 @@
 #pragma once
 
-#include "renderer.hpp"
+#include "sfml/sfml.hpp"
 
 class Game {
     public:
         Game();
         void initialize();
         void run();
+        bool isRunning();
 
     private:
-        Renderer *renderer;
+        SFML::Framework framework;
+
+        SFML::Sprite* background;
+        SFML::Window::Event* event;
 };

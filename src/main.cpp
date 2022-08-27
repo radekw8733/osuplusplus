@@ -3,6 +3,8 @@
 int main(int argc, char* args[]) {
     Game osuGame;
     osuGame.initialize();
-    osuGame.run();
+    while (osuGame.isRunning()) {
+        osuGame.run();
+    }
     return 0;
 }
