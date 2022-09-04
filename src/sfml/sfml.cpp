@@ -1,10 +1,13 @@
 #include "sfml.hpp"
-#include <SFML/Graphics.hpp>
 
 namespace SFML {
 
+Framework::Framework() {
+    window = new Window;
+}
+
 Sprite* Framework::createSprite(const char* filename) {
-    return new Sprite(filename);
+    return new Sprite(this, filename);
 }
 
 bool Framework::isRunning() {
@@ -17,7 +20,7 @@ bool Framework::isRunning() {
 }
 
 void Framework::shutdown() {
-    window.close();
+    window->close();
     gameMode = Gamemode::STOPPED;
 }
 

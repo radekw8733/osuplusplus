@@ -5,6 +5,7 @@
 
 namespace SFML {
 
+class Sprite;
 class Window {
     public:
         // Control functions

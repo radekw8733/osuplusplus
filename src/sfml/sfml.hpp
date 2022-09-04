@@ -6,10 +6,13 @@
 
 namespace SFML {
 
+class Sprite; class Window;
 class Framework {
     public:
+        Framework();
+        
         // Child components
-        Window window;
+        Window* window;
 
         // Objects creating stuff
         Sprite* createSprite(const char* filename);

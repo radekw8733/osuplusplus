@@ -1,6 +1,10 @@
 #pragma once
 
 #include "sfml/sfml.hpp"
+#include "ecs.hpp"
+#include <vector>
+#include <thread>
+#include <chrono>
 
 class Game {
     public:
@@ -10,8 +14,11 @@ class Game {
         bool isRunning();
 
     private:
+        void loadObjects();
+
         SFML::Framework framework;
 
         SFML::Sprite* background;
         SFML::Window::Event* event;
+        std::vector<Node*> objects;
 };
