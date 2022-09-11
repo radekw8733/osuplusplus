@@ -2,6 +2,7 @@
 
 #include "window.hpp"
 #include "sprite.hpp"
+#include "../ecs.hpp"
 #include <SFML/Graphics.hpp>
 
 namespace SFML {
