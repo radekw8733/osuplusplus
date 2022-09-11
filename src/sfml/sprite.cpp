@@ -13,9 +13,7 @@ Sprite::Sprite(Framework* framework, const char* filename) {
     sprite.setTexture(texture);
 }
 
-void Sprite::setPosition(unsigned int x, unsigned int y) {
-
-}
+void Sprite::setPosition(unsigned int x, unsigned int y) {}
 
 void Sprite::setScale(float x, float y) {
     sprite.setScale(x, y);
@@ -23,8 +21,7 @@ void Sprite::setScale(float x, float y) {
 
 void Sprite::onMouseClick() {}
 
-void Sprite::start() {
-}
+void Sprite::start() {}
 
 void Sprite::update() {
     framework->window->drawSprite(this);

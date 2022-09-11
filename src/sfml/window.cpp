@@ -6,21 +6,13 @@ void Window::setupWindow(const char* windowTitle, unsigned int width, unsigned i
     renderWindow = new sf::RenderWindow(sf::VideoMode(width,height), windowTitle);
 }
 
-void Window::clearWindow() {
-    renderWindow->clear();
-}
+void Window::clearWindow() { renderWindow->clear(); }
 
-void Window::display() {
-    renderWindow->display();
-}
+void Window::display() { renderWindow->display(); }
 
-void Window::close() {
-    renderWindow->close();
-}
+void Window::close() { renderWindow->close(); }
 
-sf::Vector2u Window::getWindowSize() {
-    return renderWindow->getSize();
-}
+sf::Vector2u Window::getWindowSize() { return renderWindow->getSize(); }
 
 void Window::setWindowSize(unsigned int width, unsigned int height) {
     sf::FloatRect area(0.0f, 0.0f, width, height);
