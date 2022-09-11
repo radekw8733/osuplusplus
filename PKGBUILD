@@ -10,6 +10,7 @@ md5sums=("SKIP")
 
 build() {
     cd "osuplusplus"
+    git submodule update --init --recursive
     mkdir -p build
     cd build
     cmake ..
