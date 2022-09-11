@@ -1,4 +1,5 @@
 #include "game.hpp"
+using namespace SFML;
 
 Game::Game() {}
 
@@ -13,7 +14,7 @@ void Game::initialize() {
 }
 
 void Game::loadObjects() {
-    background = framework.createSprite("background.jpg");
+    background = new Background(&framework);
 
     objects.push_back((Node*) background);
     for (Node* object : objects) {
@@ -24,11 +25,16 @@ void Game::loadObjects() {
 void Game::run() {
     if (framework.window->pollEvent(event)) {
         switch (event->eventType) {
-            case SFML::Window::Event::EventType::WindowClosed:
+            case Window::Event::EventType::WindowClosed:
                 framework.shutdown();
                 break;
-            case SFML::Window::Event::EventType::WindowResized:
+            case Window::Event::EventType::WindowResized:
                 framework.window->setWindowSize(event->windowSize.width, event->windowSize.height);
+                break;
+            case Window::Event::EventType::MouseClicked:
+                for (Node* object : objects) {
+                    object->onMouseClick();
+                }
                 break;
             default:
                 break;
@@ -39,5 +45,5 @@ void Game::run() {
         object->update();
     }
     framework.window->display();
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }

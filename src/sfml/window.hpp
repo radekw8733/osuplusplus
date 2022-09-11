@@ -23,7 +23,8 @@ class Window {
         struct Event {
             enum EventType {
                 WindowClosed,
-                WindowResized
+                WindowResized,
+                MouseClicked
             };
             struct WindowResizedEvent {
                 unsigned int width;

@@ -54,6 +54,10 @@ bool Window::pollEvent(Event* event) {
             event->eventType = Window::Event::EventType::WindowClosed;
             return true;
             break;
+        case sf::Event::MouseButtonPressed:
+            event->eventType = Window::Event::EventType::MouseClicked;
+            return true;
+            break;
         default:
             return false;
             break;

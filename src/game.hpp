@@ -2,6 +2,7 @@
 
 #include "sfml/sfml.hpp"
 #include "ecs.hpp"
+#include "components/background.hpp"
 #include <vector>
 #include <thread>
 #include <chrono>

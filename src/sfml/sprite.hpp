@@ -10,8 +10,15 @@ class Framework;
 class Sprite : public Node {
     public:
         Sprite(Framework *framework, const char* filename);
+
+        // Utils
+
         void setPosition(unsigned int x, unsigned int y);
         void setScale(float x, float y);
+
+        // Events
+        
+        void onMouseClick();
         
         void start();
         void update();

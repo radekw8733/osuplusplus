@@ -18,7 +18,7 @@ cmrc_add_resource_library(resources res/background.jpg)
 
 set(LIBS SFML) # define our required libraries
 
-file(GLOB SOURCES "src/*.cpp" "src/sfml/*.cpp") # include all source files
+file(GLOB_RECURSE SOURCES "src/*.cpp") # include all source files
 add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp ${SOURCES}) # compile
 target_link_libraries(${PROJECT_NAME} sfml-graphics sfml-window sfml-system resources) # link
 
