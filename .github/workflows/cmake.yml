@@ -20,6 +20,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
     
     - name: Install SDL2 packages
       run: sudo apt -y install libsdl2-dev libsdl2-image-dev
