@@ -14,13 +14,11 @@ class Framework {
         // Child components
         Window* window;
 
-        // Objects creating stuff
-        Sprite* createSprite(const char* filename);
-
         // Game flow control
         bool isRunning();
         void shutdown();
 
+        std::vector<Node*> objects;
     private:
         enum Gamemode {
             RUNNING,

@@ -20,6 +20,7 @@ void Game::loadObjects() {
     for (Node* object : objects) {
         object->start();
     }
+    framework.objects = objects;
 }
 
 void Game::run() {
