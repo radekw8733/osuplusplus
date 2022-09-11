@@ -24,9 +24,6 @@ target_link_libraries(${PROJECT_NAME} sfml-graphics sfml-window sfml-system reso
 
 file(COPY res DESTINATION .) # copy our resources to build folder
 
-# PACKAGING
-include(CPack)
-
 # Debian build
 if (UNIX)
 set(CPACK_DEBIAN_PACKAGE_NAME "osupp")
@@ -43,3 +40,6 @@ install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" COMPONENT applications
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/res DESTINATION "share/osupp")
 install(FILES ${CMAKE_SOURCE_DIR}/osupp.desktop DESTINATION share/applications)
 endif (UNIX)
+
+# PACKAGING
+include(CPack)
