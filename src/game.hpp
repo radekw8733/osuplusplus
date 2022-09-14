@@ -17,9 +17,13 @@ class Game {
 
     private:
         void loadObjects();
+        void setupWindow();
+        void processInput();
 
         SFML::Framework framework;
 
         SFML::Sprite* background;
         SFML::Window::Event* event;
+
+        std::thread eventThread;
 };

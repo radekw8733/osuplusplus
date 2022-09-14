@@ -18,14 +18,14 @@ void Circle::update() {
 }
 
 void Circle::onMouseClick(int xMouse, int yMouse) {
-    unsigned int radius = hitCircle->sprite.getTexture()->getSize().x / 2 - 10;
+    unsigned int radius = hitCircle->sprite.getTexture()->getSize().x / 2;
     unsigned int x = hitCircle->position.x + radius;
     unsigned int y = hitCircle->position.y + radius;
     unsigned int xDiff = abs(x - xMouse);
     unsigned int yDiff = abs(y - yMouse);
     unsigned int delta = sqrt((xDiff * xDiff) + (yDiff * yDiff)); // calculate length between mouse click and circle center
 
-    if (delta < radius) {
+    if (delta < radius - 20) {
         framework->objects.push_back(std::unique_ptr<Node>(new Circle(framework, rand() % 1000, rand() % 1000))); // create new circle
         std::vector<std::unique_ptr<Node>>::iterator position = 
             std::find_if(framework->objects.begin(), framework->objects.end(), 

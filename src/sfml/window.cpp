@@ -19,6 +19,10 @@ void Window::setWindowSize(unsigned int width, unsigned int height) {
     renderWindow->setView(sf::View(area));
 }
 
+void Window::setFrameRateLimit(unsigned int framerate) {
+    renderWindow->setFramerateLimit(framerate);
+}
+
 void Window::drawSprite(Sprite* sprite) { renderWindow->draw(sprite->sprite); }
 
 sf::Vector2i Window::getMousePosition() {

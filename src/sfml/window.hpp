@@ -15,6 +15,7 @@ class Window {
         void close();
         sf::Vector2u getWindowSize();
         void setWindowSize(unsigned int width, unsigned int height);
+        void setFrameRateLimit(unsigned int framerate);
 
         sf::Vector2i getMousePosition();
 
