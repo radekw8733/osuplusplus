@@ -13,12 +13,19 @@ class Game {
         Game();
         void initialize();
         void run();
+        void shutdown();
         bool isRunning();
 
     private:
         void loadObjects();
         void setupWindow();
         void processInput();
+
+        enum Gamemode {
+            RUNNING,
+            STOPPED
+        };
+        Gamemode gamemode = Gamemode::RUNNING;
 
         SFML::Framework framework;
 

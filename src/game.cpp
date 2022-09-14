@@ -4,7 +4,10 @@ using namespace SFML;
 Game::Game() {}
 
 bool Game::isRunning() {
-    return framework.isRunning();
+    if (gamemode == Gamemode::RUNNING) 
+        return true;
+    else
+        return false;
 }
 
 void Game::initialize() {
@@ -36,7 +39,7 @@ void Game::processInput() {
         while (framework.window->pollEvent(event)) {
             switch (event->eventType) {
                 case Window::Event::EventType::WindowClosed:
-                    framework.shutdown();
+                    shutdown();
                     break;
                 case Window::Event::EventType::WindowResized:
                     framework.window->setWindowSize(event->windowSize.width, event->windowSize.height);
@@ -57,9 +60,17 @@ void Game::processInput() {
 }
 
 void Game::run() {
-    framework.window->clearWindow();
-    for (std::unique_ptr<Node> &object : framework.objects) {
-        object->update();
+    while (isRunning()) {
+        framework.window->clearWindow();
+        for (std::unique_ptr<Node> &object : framework.objects) {
+            object->update();
+        }
+        framework.window->display();
     }
-    framework.window->display();
+    eventThread.join();
+}
+
+void Game::shutdown() {
+    framework.shutdown();
+    gamemode = Gamemode::STOPPED;
 }

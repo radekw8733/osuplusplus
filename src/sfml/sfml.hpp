@@ -18,14 +18,7 @@ class Framework {
         std::vector<std::unique_ptr<Node>> objects;
 
         // Game flow control
-        bool isRunning();
         void shutdown();
-    private:
-        enum Gamemode {
-            RUNNING,
-            STOPPED
-        };
-        Gamemode gameMode = Gamemode::RUNNING;
 };
 
 }
