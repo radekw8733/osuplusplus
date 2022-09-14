@@ -9,6 +9,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     add_compile_options (-fcolor-diagnostics -gdwarf-4)
 endif ()
+add_compile_options(-pthread)
 
 
 find_package(SFML COMPONENTS system window graphics)
