@@ -15,12 +15,13 @@ void Game::initialize() {
 
 void Game::loadObjects() {
     background = new Background(&framework);
+    Circle *circle = new Circle(&framework, 50, 100);
 
-    objects.push_back((Node*) background);
-    for (Node* object : objects) {
+    framework.objects.push_back(std::unique_ptr<Node>(background));
+    framework.objects.push_back(std::unique_ptr<Node>(circle));
+    for (std::unique_ptr<Node> &object : framework.objects) {
         object->start();
     }
-    framework.objects = objects;
 }
 
 void Game::run() {
@@ -33,8 +34,10 @@ void Game::run() {
                 framework.window->setWindowSize(event->windowSize.width, event->windowSize.height);
                 break;
             case Window::Event::EventType::MouseClicked:
-                for (Node* object : objects) {
-                    object->onMouseClick();
+                for (std::unique_ptr<Node> &object : framework.objects) {
+                    int xMouse = framework.window->getMousePosition().x;
+                    int yMouse = framework.window->getMousePosition().y;
+                    object->onMouseClick(xMouse, yMouse);
                 }
                 break;
             default:
@@ -42,7 +45,7 @@ void Game::run() {
         }
     }
     framework.window->clearWindow();
-    for (Node* object : objects) {
+    for (std::unique_ptr<Node> &object : framework.objects) {
         object->update();
     }
     framework.window->display();

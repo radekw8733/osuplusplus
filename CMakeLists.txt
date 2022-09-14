@@ -7,14 +7,14 @@ add_compile_definitions(OSUPP_VERSION_REVISION=0)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options (-fdiagnostics-color=always)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    add_compile_options (-fcolor-diagnostics)
+    add_compile_options (-fcolor-diagnostics -gdwarf-4)
 endif ()
 
 
 find_package(SFML COMPONENTS system window graphics)
 include(thirdparty/cmrc/CMakeRC.cmake)
 
-cmrc_add_resource_library(resources res/background.jpg)
+cmrc_add_resource_library(resources res/background.jpg res/hitcircle.png)
 
 set(LIBS SFML) # define our required libraries
 

@@ -6,4 +6,9 @@ using namespace SFML;
 class Background : public Sprite {
     public:
         Background(Framework *framework);
+
+        void update();
+
+    private:
+        Framework *framework;
 };

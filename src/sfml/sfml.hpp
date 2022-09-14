@@ -3,6 +3,7 @@
 #include "window.hpp"
 #include "sprite.hpp"
 #include "../ecs.hpp"
+#include <memory>
 #include <SFML/Graphics.hpp>
 
 namespace SFML {
@@ -14,12 +15,11 @@ class Framework {
         
         // Child components
         Window* window;
+        std::vector<std::unique_ptr<Node>> objects;
 
         // Game flow control
         bool isRunning();
         void shutdown();
-
-        std::vector<Node*> objects;
     private:
         enum Gamemode {
             RUNNING,

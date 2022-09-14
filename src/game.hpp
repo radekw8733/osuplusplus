@@ -3,6 +3,7 @@
 #include "sfml/sfml.hpp"
 #include "ecs.hpp"
 #include "components/background.hpp"
+#include "components/circle.hpp"
 #include <vector>
 #include <thread>
 #include <chrono>
@@ -21,5 +22,4 @@ class Game {
 
         SFML::Sprite* background;
         SFML::Window::Event* event;
-        std::vector<Node*> objects;
 };

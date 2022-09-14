@@ -19,12 +19,10 @@ void Window::setWindowSize(unsigned int width, unsigned int height) {
     renderWindow->setView(sf::View(area));
 }
 
-void Window::drawSprite(Sprite* sprite) {
-    sf::Vector2u size = sprite->texture.getSize();
-    sprite->setScale(
-        (float) getWindowSize().x / (float) size.x,
-        (float) getWindowSize().y / (float) size.y);
-    renderWindow->draw(sprite->sprite);
+void Window::drawSprite(Sprite* sprite) { renderWindow->draw(sprite->sprite); }
+
+sf::Vector2i Window::getMousePosition() {
+    return sf::Mouse::getPosition(*renderWindow);
 }
 
 

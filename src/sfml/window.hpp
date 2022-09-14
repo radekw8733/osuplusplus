@@ -16,6 +16,8 @@ class Window {
         sf::Vector2u getWindowSize();
         void setWindowSize(unsigned int width, unsigned int height);
 
+        sf::Vector2i getMousePosition();
+
         // Drawing stuff
         void drawSprite(Sprite* sprite);
 

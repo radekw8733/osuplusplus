@@ -24,6 +24,7 @@ class Sprite : public Node {
         void update();
         
         Framework* framework;
+        sf::Vector2u position;
         sf::Texture texture;
         sf::Sprite sprite;
 };
