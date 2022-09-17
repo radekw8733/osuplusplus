@@ -26,7 +26,7 @@ void Sprite::onMouseClick() {}
 
 void Sprite::start() {}
 
-void Sprite::update() {
+void Sprite::update(float delta) {
     framework->window->drawSprite(this);
 }
 

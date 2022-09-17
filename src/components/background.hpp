@@ -7,7 +7,7 @@ class Background : public Sprite {
     public:
         Background(Framework *framework);
 
-        void update();
+        void update(float delta);
 
     private:
         Framework *framework;

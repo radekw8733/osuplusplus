@@ -6,10 +6,10 @@ Background::Background(Framework *framework) : Sprite::Sprite(framework, "res/ba
     this->framework = framework;
 }
 
-void Background::update() {
+void Background::update(float delta) {
     sf::Vector2u size = sprite.getTexture()->getSize();
     sprite.setScale(
         (float) framework->window->getWindowSize().x / (float) size.x,
         (float) framework->window->getWindowSize().y / (float) size.y);
-    Sprite::update();
+    Sprite::update(delta);
 }

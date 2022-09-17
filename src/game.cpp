@@ -20,6 +20,7 @@ void Game::initialize() {
 void Game::setupWindow() {
     framework.window->setupWindow("osu++",1920,1080);
     framework.window->setFrameRateLimit(60);
+    event = framework.window->getEvent();
 }
 
 void Game::loadObjects() {
@@ -34,7 +35,6 @@ void Game::loadObjects() {
 }
 
 void Game::processInput() {
-    event = framework.window->getEvent();
     while (isRunning()) {
         while (framework.window->pollEvent(event)) {
             switch (event->eventType) {
@@ -46,9 +46,11 @@ void Game::processInput() {
                     break;
                 case Window::Event::EventType::MouseClicked:
                     for (std::unique_ptr<Node> &object : framework.objects) {
-                        int xMouse = framework.window->getMousePosition().x;
-                        int yMouse = framework.window->getMousePosition().y;
-                        object->onMouseClick(xMouse, yMouse);
+                        if (object.get() != nullptr) {
+                            int xMouse = framework.window->getMousePosition().x;
+                            int yMouse = framework.window->getMousePosition().y;
+                            object->onMouseClick(xMouse, yMouse);
+                        }
                     }
                     break;
                 default:
@@ -60,12 +62,25 @@ void Game::processInput() {
 }
 
 void Game::run() {
+    float delta = 0.0f;
+    std::chrono::system_clock::time_point time0;
+    std::chrono::system_clock::time_point time1;
     while (isRunning()) {
+        time0 = std::chrono::high_resolution_clock::now();
+
         framework.window->clearWindow();
         for (std::unique_ptr<Node> &object : framework.objects) {
-            object->update();
+            object-> update(delta);
         }
         framework.window->display();
+
+        for (int i = 0; i < framework.objectsToBeDeleted; i++) { // remove oldest hitcircles
+            framework.objects.pop_back();
+        }
+        framework.objectsToBeDeleted = 0; // reset counter
+
+        time1 = std::chrono::high_resolution_clock::now();
+        delta = std::chrono::duration_cast<std::chrono::milliseconds>(time1 - time0).count() / 1000.0f;
     }
     eventThread.join();
 }

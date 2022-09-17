@@ -15,10 +15,15 @@ class Circle : public Node {
         Circle(Framework *framework, unsigned int x, unsigned int y );
 
         void start();
-        void update();
+        void update(float delta);
         void onMouseClick(int xMouse, int yMouse);
+
+        sf::Vector2u getPosition();
 
     private:
         HitCircle *hitCircle;
         Framework *framework;
+
+        bool active = true;
+        unsigned short opacity = 0;
 };

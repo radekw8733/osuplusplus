@@ -21,7 +21,7 @@ class Sprite : public Node {
         void onMouseClick();
         
         void start();
-        void update();
+        void update(float delta);
         
         Framework* framework;
         sf::Vector2u position;
