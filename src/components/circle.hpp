@@ -7,22 +7,15 @@ using namespace SFML;
 
 class HitCircle : public Sprite {
     public:
-        HitCircle(Framework *framework);
+        HitCircle();
 };
 
-class Circle : public Node {
+class Circle {
     public:
-        Circle(Framework *framework, unsigned int x, unsigned int y );
+        Circle(unsigned int x, unsigned int y);
 
-        void start();
-        void update(float delta);
-        void onMouseClick(int xMouse, int yMouse);
-
-        sf::Vector2u getPosition();
-
-    private:
         HitCircle *hitCircle;
-        Framework *framework;
+        sf::Vector2u getPosition();
 
         bool active = true;
         unsigned short opacity = 0;

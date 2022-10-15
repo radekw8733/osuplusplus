@@ -4,6 +4,7 @@
 #include "ecs.hpp"
 #include "components/background.hpp"
 #include "components/circle.hpp"
+#include "components/circleManager.hpp"
 #include <vector>
 #include <thread>
 #include <chrono>
@@ -28,8 +29,8 @@ class Game {
         Gamemode gamemode = Gamemode::RUNNING;
 
         SFML::Framework framework;
+        CircleManager manager;
 
-        SFML::Sprite* background;
         SFML::Window::Event* event;
 
         std::thread eventThread;
