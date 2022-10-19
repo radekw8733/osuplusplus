@@ -1,5 +1,4 @@
 #include "game.hpp"
-using namespace SFML;
 
 Game::Game() {}
 

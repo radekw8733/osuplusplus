@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sfml/sfml.hpp"
+using namespace SFML;
 #include "ecs.hpp"
 #include "components/background.hpp"
 #include "components/circle.hpp"
@@ -28,10 +29,10 @@ class Game {
         };
         Gamemode gamemode = Gamemode::RUNNING;
 
-        SFML::Framework framework;
+        Framework framework;
         CircleManager manager;
 
-        SFML::Window::Event* event;
+        Window::Event* event;
 
         std::thread eventThread;
 };
