@@ -5,7 +5,8 @@ using namespace SFML;
 #include "ecs.hpp"
 #include "components/background.hpp"
 #include "components/circle.hpp"
-#include "components/circleManager.hpp"
+#include "components/fileLoader.hpp"
+#include "gameplayManager.hpp"
 #include <vector>
 #include <thread>
 #include <chrono>
@@ -18,6 +19,7 @@ class Game {
         void shutdown();
         bool isRunning();
 
+        inline static FileLoader fileLoader;
     private:
         void loadObjects();
         void setupWindow();
@@ -30,7 +32,7 @@ class Game {
         Gamemode gamemode = Gamemode::RUNNING;
 
         Framework framework;
-        CircleManager manager;
+        GameplayManager manager;
 
         Window::Event* event;
 

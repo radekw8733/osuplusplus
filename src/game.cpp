@@ -24,7 +24,6 @@ void Game::setupWindow() {
 
 void Game::loadObjects() {
     framework.objects.push_back(std::unique_ptr<Node>(new Background(&framework)));
-    manager.newCircle(100,100);
 
     for (std::unique_ptr<Node> &object : framework.objects) {
         object->start();
@@ -70,7 +69,7 @@ void Game::run() {
         for (std::unique_ptr<Node> &object : framework.objects) {
             object->update(delta);
         }
-        manager.render(delta, framework.window);
+        manager.render(delta);
         framework.window->display();
 
         time1 = std::chrono::high_resolution_clock::now();

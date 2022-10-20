@@ -4,12 +4,16 @@ CircleManager::CircleManager() {
     
 }
 
+void CircleManager::setRenderWindow(SFML::Window *window) {
+    windowToRender.reset(window);
+}
+
 void CircleManager::newCircle(unsigned int x, unsigned int y) {
     Circle* circle = new Circle(x, y);
     circles.push_back(std::unique_ptr<Circle>(circle));
 }
 
-void CircleManager::render(float delta, SFML::Window *windowToRender) {
+void CircleManager::render(float delta) {
     for (std::unique_ptr<Circle> &circle : circles) {
         if (circle.get() != nullptr) {
             if (circle->active && circle->opacity < 255) {

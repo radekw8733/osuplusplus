@@ -1,14 +1,13 @@
 #include "sprite.hpp"
+#include "../game.hpp"
 #include <cmrc/cmrc.hpp>
-
-CMRC_DECLARE(resources);
 
 namespace SFML {
 
 Sprite::Sprite(Framework* framework, const char* filename) {
     this->framework = framework;
     
-    cmrc::file file = cmrc::resources::get_filesystem().open(filename);
+    cmrc::file file = Game::fileLoader.loadResFile(filename);
     texture.loadFromMemory(file.begin(), file.size());
     sprite.setTexture(texture);
 }
