@@ -1,5 +1,2 @@
-build/
-.vscode/
-pkg/
-osu-reloaded/
-osureloaded*.pkg.tar.zst
+/.vscode
+/target
