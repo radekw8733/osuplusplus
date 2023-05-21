@@ -2,7 +2,14 @@
 name = "osuplusplus"
 version = "0.1.0"
 edition = "2021"
+authors = ["Radosław Wolański <radekw8733@gmail.com>"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
 
 [dependencies]
+bevy = { version = "0.10.1", features = ["dynamic_linking", "wayland"] }
+rand = "*"

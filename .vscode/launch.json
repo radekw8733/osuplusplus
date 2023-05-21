@@ -1,38 +1,17 @@
 {
     "configurations": [
-    {
-        "type": "lldb",
-        "request": "launch",
-        "name": "Launch",
-        "program": "${workspaceFolder}/build/osupp",
-        "args": [],
-        "cwd": "${workspaceFolder}",
-        "preLaunchTask": "Build",
-    },
         {
-            "name": "(gdb) Launch",
-            "type": "cppdbg",
+            "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/osupp",
-            "args": [],
-            "preLaunchTask": "Build",
-            "stopAtEntry": false,
-            "cwd": "${fileDirname}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty printing",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                },
-                {
-                    "description":  "Set intel disassembly syntax",
-                    "text": "-gdb-set disassembly-flavor intel",
-                    "ignoreFailures": true
-                }
-            ]
+            "name": "Cargo launch",
+            "cargo": {
+                "args": [
+                    "build",
+                ]
+            },
+            "env": {"LD_LIBRARY_PATH": "${workspaceFolder}/target/debug/deps:${userHome}/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib"},
+            "args": []
         }
+
     ]
 }
