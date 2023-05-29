@@ -1,16 +1,14 @@
-use std::time::Duration;
+use core::array::from_fn;
 
 #[allow(unused_imports)]
-#[cfg(debug_assertions)]
+#[cfg(all(debug_assertions, not(target_arch = "wasm32")))] // disable linking on WASM and release builds
 use bevy_dylib;
 use bevy::{prelude::*, input::{mouse::MouseButtonInput, ButtonState}, window::PrimaryWindow, log::LogPlugin};
-use hitcircle::{CircleID, MoveTimer, OsuCircle};
+use sprites::{hitcircle::{CircleID, MoveTimer, OsuCircle}, SpriteType, background::Background};
 use rand::Rng;
 use skin::SkinResources;
 
-use crate::hitcircle::HITCIRCLE_SIZE;
-
-mod hitcircle;
+mod sprites;
 mod skin;
 
 fn main() {
@@ -30,32 +28,24 @@ fn main() {
 fn setup(mut commands: Commands, skin: Res<SkinResources>) {
     commands.spawn(Camera2dBundle::default());
 
-    let circle = new_circle(&skin, Transform::default());
+    let mut rng = rand::thread_rng();
+    let circles: [OsuCircle; 20] = from_fn(|_| {
+        OsuCircle::new_circle(
+            format!("circle{}", rng.gen_range(0..10000)),
+            &skin,
+            Transform::from_xyz(rng.gen_range(-300.0..300.0), rng.gen_range(-300.0..300.0), 1.0)
+        )
+    });
+    let background = Background::setup_background(skin);
 
-    commands.spawn(circle);
-}
-
-fn new_circle(skin: &Res<SkinResources>, transform: Transform) -> OsuCircle {
-    let sprite = SpriteBundle {
-        transform,
-        texture: skin.hitcircle_image.clone(),
-        sprite: Sprite {
-            custom_size: Some(Vec2::new(150.0, 150.0)),
-            ..Default::default()
-        },
-        ..Default::default()
-    };
-    hitcircle::OsuCircle {
-        id: CircleID("circle1".to_string()),
-        timer: MoveTimer(Timer::new(Duration::from_secs(1), TimerMode::Repeating)),
-        sprite
-    }
+    commands.spawn(background);
+    commands.spawn_batch(circles)
 }
 
 fn mouse_click_event(
     mut mouse_event: EventReader<MouseButtonInput>,
     window: Query<&Window, With<PrimaryWindow>>,
-    circles: Query<(&CircleID, &mut Transform, Entity)>,
+    circles: Query<(&SpriteType, &mut Transform, Entity)>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
     skin: Res<SkinResources>,
     mut commands: Commands
@@ -68,17 +58,8 @@ fn mouse_click_event(
         for e in mouse_event.iter() {
             if e.button == MouseButton::Left && e.state == ButtonState::Pressed {
                 for circle in circles.iter() {
-                    let x_dif = (cursor.x - circle.1.translation.x).powi(2);
-                    let y_dif = (cursor.y - circle.1.translation.y).powi(2);
-                    let dist = (x_dif + y_dif).sqrt();
-                    debug!("dist: {:}", dist);
-                    if dist < HITCIRCLE_SIZE / 3.0 {
-                        let mut rng = rand::thread_rng();
-                        let transform = Transform::from_xyz(rng.gen_range(-100.0..100.0), rng.gen_range(-100.0..100.0), 0.0);
-
-                        debug!("CLICKED!");
-                        commands.entity(circle.2).despawn();
-                        commands.spawn(new_circle(&skin, transform));
+                    if let SpriteType::Hitcircle(id) = circle.0 {
+                        OsuCircle::click_event(cursor, circle, id, &skin, &mut commands);
                     }
                 }
             }
