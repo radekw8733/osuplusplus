@@ -28,7 +28,7 @@ jobs:
             - name: Prepare package
               run: |
                 mkdir linux
-                cp target/x86_64-unknown-linux-gnu/debug/osuplusplus linux/
+                cp target/x86_64-unknown-linux-gnu/release/osuplusplus linux/
                 cp -r assets linux/
                 zip --recurse-paths ../osuplusplus.zip .
 
@@ -56,7 +56,7 @@ jobs:
             - name: Prepare package
               run: |
                 mkdir windows
-                cp target/x86_64-pc-windows-msvc/debug/osuplusplus.exe windows/
+                cp target/x86_64-pc-windows-msvc/release/osuplusplus.exe windows/
                 cp -r assets windows/
                 Compress-Archive -Path windows/* -DestinationPath osuplusplus.zip
 
