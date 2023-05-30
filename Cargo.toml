@@ -12,6 +12,7 @@ opt-level = 3
 
 [dependencies]
 rand = "*"
+bevy_tweening = "0.7.0"
 
 [dependencies.bevy]
 version = "0.10.1"

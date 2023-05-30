@@ -1,15 +1,20 @@
 use core::array::from_fn;
+use std::time::Duration;
 
 #[allow(unused_imports)]
 #[cfg(all(debug_assertions, not(target_arch = "wasm32")))] // disable linking on WASM and release builds
 use bevy_dylib;
 use bevy::{prelude::*, input::{mouse::MouseButtonInput, ButtonState}, window::PrimaryWindow, log::LogPlugin};
-use sprites::{hitcircle::{CircleID, MoveTimer, OsuCircle}, SpriteType, background::Background};
+use bevy_tweening::TweeningPlugin;
+use sprites::{hitcircle::OsuCircle, SpriteType, background::Background};
 use rand::Rng;
 use skin::SkinResources;
 
 mod sprites;
 mod skin;
+
+#[derive(Resource)]
+struct GameTimer(Timer);
 
 fn main() {
     App::new()
@@ -18,10 +23,12 @@ fn main() {
             filter: "warn,bevy_render=info,osuplusplus=debug".to_string(),
             ..Default::default()
         }))
+        .add_plugin(TweeningPlugin)
         .init_resource::<SkinResources>()
         .add_startup_system(setup)
         .add_system(mouse_click_event)
-        .add_system(move_around)
+        .add_system(hitcircles_loop)
+        .add_system(OsuCircle::hitcircle_shown)
         .run();
 }
 
@@ -39,7 +46,8 @@ fn setup(mut commands: Commands, skin: Res<SkinResources>) {
     let background = Background::setup_background(skin);
 
     commands.spawn(background);
-    commands.spawn_batch(circles)
+    commands.insert_resource(GameTimer(Timer::new(Duration::from_millis(500), TimerMode::Repeating)));
+    commands.spawn_batch(circles);
 }
 
 fn mouse_click_event(
@@ -67,14 +75,14 @@ fn mouse_click_event(
     }
 }
 
-fn move_around(mut circles: Query<(&CircleID, &mut Transform, &mut MoveTimer)>, time: Res<Time>) {
+fn hitcircles_loop(mut commands: Commands, mut timer: ResMut<GameTimer>, skin: Res<SkinResources>, time: Res<Time>) {
     let mut rng = rand::thread_rng();
-    for mut circle in &mut circles {
-        circle.2.0.tick(time.delta());
-        if circle.0.0 == "circle1" && circle.2.0.finished() {
-            circle.1.translation.x += 10.0 * time.delta_seconds();
-            circle.1.translation.x = rng.gen_range(0..100) as f32;
-            circle.1.translation.y = rng.gen_range(0..100) as f32;
-        }
+    timer.0.tick(time.delta());
+    if timer.0.finished() {
+        commands.spawn(OsuCircle::new_circle(
+            format!("circle{}", rng.gen_range(0..10000)),
+            &skin,
+            Transform::from_xyz(rng.gen_range(-300.0..300.0), rng.gen_range(-300.0..300.0), 1.0)
+        ));
     }
 }
