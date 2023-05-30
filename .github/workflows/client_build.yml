@@ -1,0 +1,67 @@
+name: Game client build
+
+on:
+    push:
+        branches: [ master ]
+    pull_request:
+        branches: [ master ]
+
+jobs:
+    ubuntu-build:
+        name: Ubuntu debug build
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+            - name: Download rust toolchain
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                targets: x86_64-unknown-linux-gnu
+            - name: Install dependencies
+              run: |
+                sudo apt update; sudo apt install pkg-config libwayland-dev libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+            
+            - name: Build
+              run: cargo build --verbose --target x86_64-unknown-linux-gnu
+
+            - name: Prepare package
+              run: |
+                mkdir linux
+                cp target/x86_64-unknown-linux-gnu/debug/osuplusplus linux/
+                cp -r assets linux/
+                zip --recurse-paths ../osuplusplus.zip .
+
+            - name: Upload package
+              uses: actions/upload-artifact@v3
+              with:
+                path: osuplusplus.zip
+                name: Linux
+
+    windows-build:
+        name: Windows debug build
+        runs-on: windows-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+            - name: Download rust toolchain
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                targets: x86_64-pc-windows-msvc
+
+            - name: Build
+              run: cargo build --verbose --target x86_64-pc-windows-msvc
+
+            - name: Prepare package
+              run: |
+                mkdir windows
+                cp target/x86_64-pc-windows-msvc/debug/osuplusplus.exe windows/
+                cp -r assets windows/
+                Compress-Archive -Path windows/* -DestinationPath osuplusplus.zip
+
+            - name: Upload package
+              uses: actions/upload-artifact@v3
+              with:
+                path: osuplusplus.zip
+                name: Windows
