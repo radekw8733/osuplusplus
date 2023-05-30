@@ -30,7 +30,7 @@ jobs:
                 mkdir linux
                 cp target/x86_64-unknown-linux-gnu/release/osuplusplus linux/
                 cp -r assets linux/
-                zip --recurse-paths ../osuplusplus.zip .
+                zip --recurse-paths osuplusplus.zip linux/
 
             - name: Upload package
               uses: actions/upload-artifact@v3
