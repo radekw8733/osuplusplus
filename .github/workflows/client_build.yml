@@ -8,7 +8,7 @@ on:
 
 jobs:
     ubuntu-build:
-        name: Ubuntu debug build
+        name: Ubuntu release build
         runs-on: ubuntu-latest
 
         steps:
@@ -20,10 +20,10 @@ jobs:
                 targets: x86_64-unknown-linux-gnu
             - name: Install dependencies
               run: |
-                sudo apt update; sudo apt install pkg-config libwayland-dev libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+                sudo apt update; sudo apt install pkg-config libwayland-dev libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev
             
             - name: Build
-              run: cargo build --verbose --target x86_64-unknown-linux-gnu
+              run: cargo build --release --target x86_64-unknown-linux-gnu
 
             - name: Prepare package
               run: |
@@ -39,7 +39,7 @@ jobs:
                 name: Linux
 
     windows-build:
-        name: Windows debug build
+        name: Windows release build
         runs-on: windows-latest
 
         steps:
@@ -51,7 +51,7 @@ jobs:
                 targets: x86_64-pc-windows-msvc
 
             - name: Build
-              run: cargo build --verbose --target x86_64-pc-windows-msvc
+              run: cargo build --release --target x86_64-pc-windows-msvc
 
             - name: Prepare package
               run: |
