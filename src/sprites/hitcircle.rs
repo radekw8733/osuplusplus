@@ -106,8 +106,8 @@ impl OsuCircle {
             }
         );
         let seq = fadein
-            .with_completed_event(AnimationCompletedType::Shown as u64);
-            // .then(fadeout.with_completed_event(AnimationCompletedType::Hidden as u64));
+            .with_completed_event(AnimationCompletedType::Shown as u64)
+            .then(fadeout.with_completed_event(AnimationCompletedType::Hidden as u64));
 
         OsuCircle {
             sprite_type: SpriteType::Hitcircle(temp.id),
