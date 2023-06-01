@@ -1,20 +1,16 @@
-use core::array::from_fn;
-use std::time::Duration;
-
 #[allow(unused_imports)]
 #[cfg(all(debug_assertions, not(target_arch = "wasm32")))] // disable linking on WASM and release builds
 use bevy_dylib;
 use bevy::{prelude::*, input::{mouse::MouseButtonInput, ButtonState}, window::PrimaryWindow, log::LogPlugin};
-use bevy_tweening::TweeningPlugin;
-use sprites::{hitcircle::OsuCircle, SpriteType, background::Background};
-use rand::Rng;
+use bevy_tweening::{TweeningPlugin, Animator};
+use map::CurrentOsuMap;
+use sprites::{hitcircle::{OsuCircle, CircleID}, SpriteType, background::Background};
 use skin::SkinResources;
 
 mod sprites;
 mod skin;
-
-#[derive(Resource)]
-struct GameTimer(Timer);
+mod map;
+mod file_reader;
 
 fn main() {
     App::new()
@@ -26,37 +22,24 @@ fn main() {
         .add_plugin(TweeningPlugin)
         .init_resource::<SkinResources>()
         .add_startup_system(setup)
+        .add_startup_system(map::load_map.after(setup))
         .add_system(mouse_click_event)
-        .add_system(hitcircles_loop)
+        .add_system(running_map_loop.after(map::load_map))
         .add_system(OsuCircle::hitcircle_shown)
         .run();
 }
 
 fn setup(mut commands: Commands, skin: Res<SkinResources>) {
-    commands.spawn(Camera2dBundle::default());
-
-    let mut rng = rand::thread_rng();
-    let circles: [OsuCircle; 20] = from_fn(|_| {
-        OsuCircle::new_circle(
-            format!("circle{}", rng.gen_range(0..10000)),
-            &skin,
-            Transform::from_xyz(rng.gen_range(-300.0..300.0), rng.gen_range(-300.0..300.0), 1.0)
-        )
-    });
     let background = Background::setup_background(skin);
-
     commands.spawn(background);
-    commands.insert_resource(GameTimer(Timer::new(Duration::from_millis(500), TimerMode::Repeating)));
-    commands.spawn_batch(circles);
+    commands.spawn(Camera2dBundle::default());
 }
 
 fn mouse_click_event(
     mut mouse_event: EventReader<MouseButtonInput>,
     window: Query<&Window, With<PrimaryWindow>>,
-    circles: Query<(&SpriteType, &mut Transform, Entity)>,
+    mut circles: Query<(&SpriteType, &mut Transform, Entity, &Sprite, &mut Animator<Sprite>, &CircleID)>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
-    skin: Res<SkinResources>,
-    mut commands: Commands
 ) {
     let window = window.get_single().ok().unwrap();
     let (camera, camera_transform) = camera_q.single();
@@ -65,9 +48,15 @@ fn mouse_click_event(
             .and_then(|cursor| camera.viewport_to_world_2d(camera_transform, cursor)) {
         for e in mouse_event.iter() {
             if e.button == MouseButton::Left && e.state == ButtonState::Pressed {
-                for circle in circles.iter() {
-                    if let SpriteType::Hitcircle(id) = circle.0 {
-                        OsuCircle::click_event(cursor, circle, id, &skin, &mut commands);
+                let mut circles_vec: Vec<(&SpriteType, Mut<Transform>, Entity, &Sprite, Mut<Animator<Sprite>>, &CircleID)> = circles.iter_mut().collect();
+                // sort over circle age
+                circles_vec.sort_by(|a, b| {
+                    a.5.0.cmp(&b.5.0)
+                });
+                // keep searching in ordered circles
+                for circle in circles_vec {
+                    if OsuCircle::click_event(cursor, circle).is_ok() {
+                        break
                     }
                 }
             }
@@ -75,14 +64,21 @@ fn mouse_click_event(
     }
 }
 
-fn hitcircles_loop(mut commands: Commands, mut timer: ResMut<GameTimer>, skin: Res<SkinResources>, time: Res<Time>) {
-    let mut rng = rand::thread_rng();
-    timer.0.tick(time.delta());
-    if timer.0.finished() {
-        commands.spawn(OsuCircle::new_circle(
-            format!("circle{}", rng.gen_range(0..10000)),
-            &skin,
-            Transform::from_xyz(rng.gen_range(-300.0..300.0), rng.gen_range(-300.0..300.0), 1.0)
-        ));
+fn running_map_loop(
+    mut commands: Commands,
+    skin: Res<SkinResources>,
+    time: Res<Time>,
+    map: Option<ResMut<CurrentOsuMap>>
+) {
+    if map.is_some() {
+        let map = &mut map.unwrap().0;
+        map.running_time.tick(time.delta());
+        if !map.running_time.paused() {
+            if map.running_time.elapsed() >= map.circles[map.current_circle_index].timing.0 {
+                let circle = OsuCircle::new_circle(CircleID(map.current_circle_index as u64), map.circles[map.current_circle_index], skin);
+                map.current_circle_index += 1;
+                commands.spawn(circle);
+            }
+        }
     }
 }

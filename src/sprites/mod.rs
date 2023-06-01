@@ -5,7 +5,7 @@ use self::hitcircle::CircleID;
 pub mod hitcircle;
 pub mod background;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub enum SpriteType {
     Hitcircle(CircleID),
     Background,
