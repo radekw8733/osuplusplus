@@ -1,7 +1,8 @@
-use std::{fs::{self, File}, path::PathBuf, io::Error};
+use std::{fs::{self, File}, path::PathBuf, io::{Error, BufReader}};
 
 use glob::glob;
 use utf8_read::{Reader, Char};
+use zip::ZipArchive;
 
 pub fn load_file(path: PathBuf) -> Result<Vec<String>, Error> {
     let file = fs::File::open(path)?;
@@ -45,4 +46,20 @@ pub fn find_single(pattern: &str) -> Result<PathBuf, &'static str> {
         }
     }
     return Err("file not found!");
+}
+
+pub fn extract_archive(src: &PathBuf, dst: &PathBuf) -> Result<(), String> {
+    let file = match fs::File::open(src) {
+        Ok(file) => file,
+        Err(e) => return Err(format!("{}", e))
+    };
+    let reader = BufReader::new(file);
+    let mut archive = match ZipArchive::new(reader) {
+        Ok(archive) => archive,
+        Err(e) => return Err(format!("{}", e))
+    };
+    return match archive.extract(dst) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e.to_string())
+    }
 }

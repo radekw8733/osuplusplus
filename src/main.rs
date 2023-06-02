@@ -16,15 +16,16 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(LogPlugin {
             #[cfg(debug_assertions)]
-            filter: "warn,bevy_render=info,wgpu_hal=error,osuplusplus=debug".to_string(),
+            filter: "warn,bevy_render=info,wgpu_hal=error,osuplusplus=trace".to_string(),
             ..Default::default()
         }))
         .add_plugin(TweeningPlugin)
         .init_resource::<SkinResources>()
         .add_startup_system(setup)
-        .add_startup_system(map::load_map.after(setup))
+        .add_startup_system(map::load_first_avail_beatmap.after(setup))
         .add_system(mouse_click_event)
-        .add_system(running_map_loop.after(map::load_map))
+        .add_system(map::load_dnd_beatmap_archive)
+        .add_system(running_map_loop.after(map::load_first_avail_beatmap))
         .add_system(OsuCircle::hitcircle_shown)
         .run();
 }

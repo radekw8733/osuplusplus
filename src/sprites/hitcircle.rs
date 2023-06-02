@@ -60,7 +60,7 @@ impl OsuCircle {
         let y_dif = (cursor.y - circle.1.translation.y).powi(2);
         let dist = (x_dif + y_dif).sqrt();
         if dist < HITCIRCLE_SIZE / 3.0 {
-            debug!("{:?} CLICKED!", circle.0);
+            trace!("{:?} at ({}, {}) clicked!", circle.0, circle.1.translation.x, circle.1.translation.y);
             
             let cur_color = circle.3.color;
             let fadeout_duration = HITCIRCLE_FADE_DURATION_MILLIS as f32 * cur_color.a() / 4.0;

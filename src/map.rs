@@ -2,7 +2,7 @@ use std::{time::Duration, fs, path::PathBuf};
 
 use bevy::{prelude::*, time::Stopwatch};
 
-use crate::{sprites::hitcircle::{Timing, OsuCircleTemplate, CircleID}, file_reader};
+use crate::{sprites::hitcircle::{Timing, OsuCircleTemplate, CircleID}, file_reader::{self, extract_archive}};
 
 const OSUPIXELS_WIDTH: f32 = 640.0;
 const OSUPIXELS_HEIGHT: f32 = 480.0;
@@ -18,40 +18,63 @@ pub struct OsuMap {
 #[derive(Resource)]
 pub struct CurrentOsuMap(pub OsuMap);
 
-pub fn load_map(mut commands: Commands) {
-    fn no_map_msg() {
+pub fn load_first_avail_beatmap(mut commands: Commands) {
+    fn no_beatmap_msg() {
         warn!("No maps found in assets/maps! Load them by dragging zip to game window or manually unzip .osz to game folder");
     }
     // TODO: Error handling when no maps
     let mut beatmap_path = PathBuf::new();
-    let beatmap_folders = fs::read_dir("assets/maps/").expect("assets/maps not found!");
+    let beatmap_folders = match fs::read_dir("assets/maps/") {
+        Ok(dir) => dir,
+        Err(e) => {
+            error!("{}", e);
+            return
+        }
+    };
+    debug!("Beatmaps folder in game folder found");
+    debug!("Searching for folders in beatmaps folder...");
     for beatmap_folder in beatmap_folders {
         match beatmap_folder {
             Ok(entry) => {
+                trace!("{:?}", entry);
                 let mut entry_path = entry.path().to_path_buf();
                 entry_path.push("*.osu");
                 beatmap_path = match file_reader::find_single(entry_path.to_str().unwrap()) {
-                    Ok(path) => path,
+                    Ok(path) => {
+                        debug!("Found beatmap main file at {:?}", path);
+                        path
+                    },
                     Err(_) => {
-                        no_map_msg();
+                        no_beatmap_msg();
                         return
                     }
                 }
             },
             Err(_) => {
-                no_map_msg();
+                no_beatmap_msg();
                 return
             }
         }
     }
+    if beatmap_path.to_str().unwrap().is_empty() {
+        no_beatmap_msg();
+    }
+    else {
+        load_beatmap(&mut commands, beatmap_path)
+    }
+    
+}
 
+pub fn load_beatmap(commands: &mut Commands, beatmap_path: PathBuf) {
+    debug!("Loading beatmap from {:?}", beatmap_path);
     let beatmap = match file_reader::load_file(beatmap_path) {
         Ok(f) => f,
         Err(_) => {
-            info!("No maps found in assets/maps!");
+            error!("Invalid beatmap file path!");
             return;
         }
     };
+    debug!("Beatmap file loading successful, searching for metadata");
     let hitobject_header = String::from("[HitObjects]");
     let mut circles: Vec<OsuCircleTemplate> = Vec::new();
     let mut hitobjects_header_index = 0;
@@ -99,4 +122,31 @@ pub fn load_map(mut commands: Commands) {
         circles
     };
     commands.insert_resource(CurrentOsuMap(map));
+    debug!("Beatmap translating successful")
+}
+
+pub fn load_dnd_beatmap_archive(mut commands: Commands, mut dnd_events: EventReader<FileDragAndDrop>) {
+    for ev in dnd_events.iter() {
+        if let FileDragAndDrop::DroppedFile { window: _, path_buf } = ev {
+            debug!("New file dragged onto window pointing to {:?}", path_buf);
+            let dir_name = path_buf.file_stem().unwrap();
+            let mut dst_dir = PathBuf::new();
+            dst_dir.push("assets");
+            dst_dir.push("maps");
+            dst_dir.push(dir_name);
+            match extract_archive(path_buf, &dst_dir) {
+                Ok(()) => {
+                    let mut beatmap_file_pattern = PathBuf::from(dst_dir);
+                    beatmap_file_pattern.push("*.osu");
+                    let beatmap_file = file_reader::find_single(beatmap_file_pattern.to_str().unwrap());
+                    match beatmap_file {
+                        Ok(path) => load_beatmap(&mut commands, path),
+                        Err(e) => error!("{}", e)
+                    }
+                },
+                Err(e) => error!("{}", e)
+            };
+            
+        }
+    }
 }
