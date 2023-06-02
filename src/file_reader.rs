@@ -63,3 +63,16 @@ pub fn extract_archive(src: &PathBuf, dst: &PathBuf) -> Result<(), String> {
         Err(e) => Err(e.to_string())
     }
 }
+
+pub fn get_section(data: &Vec<String>, header: &str) -> Vec<String> {
+    for (section_start_index, line) in data.iter().enumerate() {
+        if line.contains(&header) {
+            for (section_end_index, line) in data[section_start_index..data.len()].iter().enumerate() {
+                if line.is_empty() {
+                    return data[section_start_index+1..section_start_index+section_end_index].to_vec();
+                }
+            }
+        }
+    }
+    Vec::new()
+}

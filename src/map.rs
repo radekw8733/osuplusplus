@@ -7,12 +7,37 @@ use crate::{sprites::hitcircle::{Timing, OsuCircleTemplate, CircleID}, file_read
 const OSUPIXELS_WIDTH: f32 = 640.0;
 const OSUPIXELS_HEIGHT: f32 = 480.0;
 
-#[derive(Component)]
+const BEATMAP_GENERAL_INTO_HEADER: &'static str = "[General]";
+const BEATMAP_METADATA_HEADER: &'static str = "[Metadata]";
+const BEATMAP_HITOBJECT_HEADER: &'static str = "[HitObjects]";
+
+#[derive(Component, Default, Debug)]
+pub struct OsuMapInfo {
+    pub audio_filename: String
+}
+
+#[derive(Component, Default, Debug)]
+pub struct OsuMapMetadata {
+    pub title: String,
+    pub title_u: String,
+    pub artist: String,
+    pub artist_u: String,
+    pub creator: String,
+    pub version: String,
+    pub source: String,
+    pub tags: String,
+    pub beatmap_id: u32,
+    pub beatmapset_id: u32
+}
+
+#[derive(Component, Debug)]
 pub struct OsuMap {
     pub loaded: bool,
     pub running_time: Stopwatch,
     pub current_circle_index: usize,
-    pub circles: Vec<OsuCircleTemplate>
+    pub circles: Vec<OsuCircleTemplate>,
+    pub beatmap_info: OsuMapInfo,
+    pub beatmap_metadata: OsuMapMetadata
 }
 
 #[derive(Resource)]
@@ -74,24 +99,55 @@ pub fn load_beatmap(commands: &mut Commands, beatmap_path: PathBuf) {
             return;
         }
     };
-    debug!("Beatmap file loading successful, searching for metadata");
-    let hitobject_header = String::from("[HitObjects]");
-    let mut circles: Vec<OsuCircleTemplate> = Vec::new();
-    let mut hitobjects_header_index = 0;
+    debug!("Beatmap file loading successful");
 
-    for (index, line) in beatmap.iter().enumerate() {
-        if line.contains(&hitobject_header) {
-            hitobjects_header_index = index;
-            break;
+    trace!("Loading beatmap general info");
+    let beatmap_info_section = file_reader::get_section(&beatmap, BEATMAP_GENERAL_INTO_HEADER);
+    let mut beatmap_info = OsuMapInfo::default();
+    for line in beatmap_info_section.iter() {
+        let mut line = line.split(':');
+
+        let left_field = line.next().expect("Invalid [General] format!");
+        let right_field = line.next().expect("Invalid [General] format!");
+
+        match left_field {
+            "AudioFilename" => beatmap_info.audio_filename = right_field.trim().to_string(),
+            _ => () // TODO - more info to parse
         }
     }
+    trace!("Beatmap general info loaded successfully");
+    trace!("{:#?}", beatmap_info);
 
-    let hitobject_entries = &beatmap[hitobjects_header_index+1..beatmap.len()];
-    for (line_i, line) in hitobject_entries.iter().enumerate() {
-        if line == "" {
-            break
+    trace!("Loading beatmap metadata");
+    let beatmap_metadata_section = file_reader::get_section(&beatmap, BEATMAP_METADATA_HEADER);
+    let mut beatmap_metadata = OsuMapMetadata::default();
+    for line in beatmap_metadata_section.iter() {
+        let mut line = line.split(':');
+
+        let left_field = line.next().expect("Invalid [General] format!");
+        let right_field = line.next().expect("Invalid [General] format!");
+
+        match left_field {
+            "Title" => beatmap_metadata.title = right_field.trim().to_string(),
+            "TitleUnicode" => beatmap_metadata.title_u = right_field.trim().to_string(),
+            "Artist" => beatmap_metadata.artist = right_field.trim().to_string(),
+            "ArtistUnicode" => beatmap_metadata.artist_u = right_field.trim().to_string(),
+            "Creator" => beatmap_metadata.creator = right_field.trim().to_string(),
+            "Version" => beatmap_metadata.version = right_field.trim().to_string(),
+            "Source" => beatmap_metadata.source = right_field.trim().to_string(),
+            "Tags" => beatmap_metadata.tags = right_field.trim().to_string(),
+            "BeatmapID" => beatmap_metadata.beatmap_id = right_field.parse::<u32>().ok().unwrap(),
+            "BeatmapSetID" => beatmap_metadata.beatmapset_id = right_field.parse::<u32>().ok().unwrap(),
+            _ => () // TODO - more info to parse
         }
+    }
+    trace!("Beatmap metadata loaded successfully");
+    trace!("{:#?}", beatmap_metadata);
 
+    trace!("Creating hitcircle templates");
+    let mut circles: Vec<OsuCircleTemplate> = Vec::new();
+    let hitobjects_section = file_reader::get_section(&beatmap, BEATMAP_HITOBJECT_HEADER);
+    for (line_i, line) in hitobjects_section.iter().enumerate() {
         let line = line.split(',');
         let mut x = 0.0;
         let mut y = 0.0;
@@ -114,15 +170,19 @@ pub fn load_beatmap(commands: &mut Commands, beatmap_path: PathBuf) {
         };
         circles.push(circle);
     }
+    trace!("Created {} hitcircle templates successfully", circles.len());
 
-    let map = OsuMap {
+    let beatmap = OsuMap {
         loaded: true,
         running_time: Stopwatch::new(),
         current_circle_index: 0,
-        circles
+        circles,
+        beatmap_info,
+        beatmap_metadata
     };
-    commands.insert_resource(CurrentOsuMap(map));
-    debug!("Beatmap translating successful")
+    debug!("Beatmap loading successful");
+    info!("Playing beatmap: {} - {}", beatmap.beatmap_metadata.artist, beatmap.beatmap_metadata.title);
+    commands.insert_resource(CurrentOsuMap(beatmap));
 }
 
 pub fn load_dnd_beatmap_archive(mut commands: Commands, mut dnd_events: EventReader<FileDragAndDrop>) {
