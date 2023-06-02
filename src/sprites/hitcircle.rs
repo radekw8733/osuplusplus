@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_tweening::{Animator, Tween, lens::SpriteColorLens, TweenCompleted, EaseMethod};
+use bevy_tweening::{Animator, Tween, lens::{SpriteColorLens, TransformScaleLens}, TweenCompleted, EaseMethod, EaseFunction, AnimatorState, Delay};
 
 use crate::skin::SkinResources;
 
@@ -45,7 +45,8 @@ pub struct OsuCircleTemplate {
 pub struct OsuCircle {
     pub sprite_type: SpriteType,
     pub timing: Timing,
-    pub animator: Animator<Sprite>,
+    pub sprite_animator: Animator<Sprite>,
+    pub transform_animator: Animator<Transform>,
     pub hitcircle_sprite: SpriteBundle,
     pub id: CircleID,
 }
@@ -53,7 +54,7 @@ pub struct OsuCircle {
 impl OsuCircle {
     pub fn click_event(
         cursor: Vec2,
-        mut circle: (&SpriteType, Mut<Transform>, Entity, &Sprite, Mut<Animator<Sprite>>, &CircleID),
+        mut circle: (&SpriteType, Mut<Transform>, Entity, &Sprite, Mut<Animator<Sprite>>, Mut<Animator<Transform>>, &CircleID),
     ) -> Result<(), ()> {
         let x_dif = (cursor.x - circle.1.translation.x).powi(2);
         let y_dif = (cursor.y - circle.1.translation.y).powi(2);
@@ -72,6 +73,7 @@ impl OsuCircle {
                 }
             ).with_completed_event(AnimationCompletedType::Hidden as u64);
             circle.4.set_tweenable(fadeout);
+            circle.5.state = AnimatorState::Playing;
             return Ok(());
         }
         return Err(());
@@ -97,22 +99,33 @@ impl OsuCircle {
                 end: Color::Rgba { red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0 }
             }
         );
+        let delay: Delay<Sprite> = Delay::new(Duration::from_millis(HITCIRCLE_FADE_DURATION_MILLIS / 2));
         let fadeout = Tween::new(
             EaseMethod::Linear,
-            Duration::from_millis(HITCIRCLE_FADE_DURATION_MILLIS),
+            Duration::from_millis(HITCIRCLE_FADE_DURATION_MILLIS / 2),
             SpriteColorLens {
                 start: Color::Rgba { red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0 },
                 end: Color::Rgba { red: 1.0, green: 1.0, blue: 1.0, alpha: 0.0 }
             }
         );
+        let scaleup = Tween::new(
+            EaseFunction::CubicOut,
+            Duration::from_millis(HITCIRCLE_FADE_DURATION_MILLIS * 2),
+            TransformScaleLens {
+                start: Vec3::new(1.0, 1.0, 1.0),
+                end: Vec3::new(1.8, 1.8, 1.0)
+            }
+        );
         let seq = fadein
             .with_completed_event(AnimationCompletedType::Shown as u64)
+            .then(delay)
             .then(fadeout.with_completed_event(AnimationCompletedType::Hidden as u64));
 
         OsuCircle {
             sprite_type: SpriteType::Hitcircle(temp.id),
             timing: temp.timing,
-            animator: Animator::new(seq),
+            sprite_animator: Animator::new(seq),
+            transform_animator: Animator::new(scaleup).with_state(bevy_tweening::AnimatorState::Paused),
             hitcircle_sprite: sprite,
             id,
         }

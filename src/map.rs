@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{time::Duration, fs, path::PathBuf};
 
 use bevy::{prelude::*, time::Stopwatch};
 
@@ -19,19 +19,51 @@ pub struct OsuMap {
 pub struct CurrentOsuMap(pub OsuMap);
 
 pub fn load_map(mut commands: Commands) {
+    fn no_map_msg() {
+        warn!("No maps found in assets/maps! Load them by dragging zip to game window or manually unzip .osz to game folder");
+    }
+    // TODO: Error handling when no maps
+    let mut beatmap_path = PathBuf::new();
+    let beatmap_folders = fs::read_dir("assets/maps/").expect("assets/maps not found!");
+    for beatmap_folder in beatmap_folders {
+        match beatmap_folder {
+            Ok(entry) => {
+                let mut entry_path = entry.path().to_path_buf();
+                entry_path.push("*.osu");
+                beatmap_path = match file_reader::find_single(entry_path.to_str().unwrap()) {
+                    Ok(path) => path,
+                    Err(_) => {
+                        no_map_msg();
+                        return
+                    }
+                }
+            },
+            Err(_) => {
+                no_map_msg();
+                return
+            }
+        }
+    }
+
+    let beatmap = match file_reader::load_file(beatmap_path) {
+        Ok(f) => f,
+        Err(_) => {
+            info!("No maps found in assets/maps!");
+            return;
+        }
+    };
     let hitobject_header = String::from("[HitObjects]");
-    let map_text = file_reader::load_file("assets/maps/map0.osu");
     let mut circles: Vec<OsuCircleTemplate> = Vec::new();
     let mut hitobjects_header_index = 0;
 
-    for (index, line) in map_text.iter().enumerate() {
+    for (index, line) in beatmap.iter().enumerate() {
         if line.contains(&hitobject_header) {
             hitobjects_header_index = index;
             break;
         }
     }
 
-    let hitobject_entries = &map_text[hitobjects_header_index+1..map_text.len()];
+    let hitobject_entries = &beatmap[hitobjects_header_index+1..beatmap.len()];
     for (line_i, line) in hitobject_entries.iter().enumerate() {
         if line == "" {
             break

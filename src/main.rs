@@ -16,7 +16,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(LogPlugin {
             #[cfg(debug_assertions)]
-            filter: "warn,bevy_render=info,osuplusplus=debug".to_string(),
+            filter: "warn,bevy_render=info,wgpu_hal=error,osuplusplus=debug".to_string(),
             ..Default::default()
         }))
         .add_plugin(TweeningPlugin)
@@ -38,7 +38,7 @@ fn setup(mut commands: Commands, skin: Res<SkinResources>) {
 fn mouse_click_event(
     mut mouse_event: EventReader<MouseButtonInput>,
     window: Query<&Window, With<PrimaryWindow>>,
-    mut circles: Query<(&SpriteType, &mut Transform, Entity, &Sprite, &mut Animator<Sprite>, &CircleID)>,
+    mut circles: Query<(&SpriteType, &mut Transform, Entity, &Sprite, &mut Animator<Sprite>, &mut Animator<Transform>, &CircleID)>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
 ) {
     let window = window.get_single().ok().unwrap();
@@ -48,10 +48,10 @@ fn mouse_click_event(
             .and_then(|cursor| camera.viewport_to_world_2d(camera_transform, cursor)) {
         for e in mouse_event.iter() {
             if e.button == MouseButton::Left && e.state == ButtonState::Pressed {
-                let mut circles_vec: Vec<(&SpriteType, Mut<Transform>, Entity, &Sprite, Mut<Animator<Sprite>>, &CircleID)> = circles.iter_mut().collect();
+                let mut circles_vec: Vec<(&SpriteType, Mut<Transform>, Entity, &Sprite, Mut<Animator<Sprite>>, Mut<Animator<Transform>>, &CircleID)> = circles.iter_mut().collect();
                 // sort over circle age
                 circles_vec.sort_by(|a, b| {
-                    a.5.0.cmp(&b.5.0)
+                    a.6.0.cmp(&b.6.0)
                 });
                 // keep searching in ordered circles
                 for circle in circles_vec {
