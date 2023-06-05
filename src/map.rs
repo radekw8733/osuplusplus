@@ -1,8 +1,9 @@
 use std::{time::Duration, fs, path::PathBuf};
 
 use bevy::{prelude::*, time::Stopwatch};
+use lyon_geom::{Point, euclid::Point2D};
 
-use crate::{sprites::hitcircle::{Timing, OsuCircleTemplate, CircleID}, file_reader::{self, extract_archive}};
+use crate::{sprites::{hitcircle::HitObjectID, Timing, HitObjectTemplate, HitObjectAdditionalParams, OsuHitObjectType, slider::{OsuSliderParams, OsuSliderCurveType}}, file_reader::{self, extract_archive}};
 
 const OSUPIXELS_WIDTH: f32 = 640.0;
 const OSUPIXELS_HEIGHT: f32 = 480.0;
@@ -35,7 +36,7 @@ pub struct OsuMap {
     pub loaded: bool,
     pub running_time: Stopwatch,
     pub current_circle_index: usize,
-    pub circles: Vec<OsuCircleTemplate>,
+    pub circles: Vec<HitObjectTemplate>,
     pub beatmap_info: OsuMapInfo,
     pub beatmap_metadata: OsuMapMetadata
 }
@@ -138,45 +139,105 @@ pub fn load_beatmap(commands: &mut Commands, beatmap_path: PathBuf) {
             "Tags" => beatmap_metadata.tags = right_field.trim().to_string(),
             "BeatmapID" => beatmap_metadata.beatmap_id = right_field.parse::<u32>().ok().unwrap(),
             "BeatmapSetID" => beatmap_metadata.beatmapset_id = right_field.parse::<u32>().ok().unwrap(),
-            _ => () // TODO - more info to parse
+            _ => ()
         }
     }
     trace!("Beatmap metadata loaded successfully");
     trace!("{:#?}", beatmap_metadata);
 
     trace!("Creating hitcircle templates");
-    let mut circles: Vec<OsuCircleTemplate> = Vec::new();
+    let mut hitobjects: Vec<HitObjectTemplate> = Vec::new();
     let hitobjects_section = file_reader::get_section(&beatmap, BEATMAP_HITOBJECT_HEADER);
     for (line_i, line) in hitobjects_section.iter().enumerate() {
-        let line = line.split(',');
+        let line_spl = &mut line.split(',');
         let mut x = 0.0;
         let mut y = 0.0;
         let mut time = 0;
-        // let mut circle_type = 0;
+        let mut circle_type = 0;
+        let mut params_raw = String::new();
+        // slider data
+        let mut slides_count = 0;
+        let mut length = 0.0;
 
-        for (pos, field) in line.into_iter().enumerate() {
+        for (pos, field) in line_spl.clone().into_iter().enumerate() {
             match pos {
                 0 => x = field.parse::<f32>().ok().expect("HitObject x field not found!") - OSUPIXELS_WIDTH / 2.0,
                 1 => y = -(field.parse::<f32>().ok().expect("HitObject y field not found!") - OSUPIXELS_HEIGHT / 2.0),
                 2 => time = field.parse::<u32>().ok().expect("HitObject time field not found"),
+                3 => circle_type = field.parse::<u32>().ok().expect("HitObject type field not found"),
+                4 => (), // TODO - hitsounds
                 _ => ()
             }
         }
 
-        let circle = OsuCircleTemplate {
-            id: CircleID(line_i as u64),
+        let mut params = HitObjectAdditionalParams::HitcircleParams;
+        match circle_type.try_into() {
+            Ok(OsuHitObjectType::HitCircle) => {
+                params = HitObjectAdditionalParams::HitcircleParams;
+            },
+            Ok(OsuHitObjectType::Slider) => {
+                for (pos, field) in line_spl.into_iter().enumerate() {
+                    match pos {
+                        5 => params_raw = field.to_string(),
+                        6 => slides_count = field.parse::<u32>().ok().expect("HitObject slides field not found"),
+                        7 => length = field.parse::<f32>().ok().expect("HitObject length field not found"),
+                        _ => ()
+                    }
+                }
+
+                let mut params_spl = params_raw.split('|');
+
+                let curve_type = match params_spl.next().unwrap() {
+                    "B" => OsuSliderCurveType::Bezier,
+                    "C" => OsuSliderCurveType::CentripetalCatmullRom,
+                    "L" => OsuSliderCurveType::Linear,
+                    "P" => OsuSliderCurveType::PerfectCircle,
+                    &_ => OsuSliderCurveType::Bezier
+                };
+
+                let mut curve_points = Vec::new();
+                for point_p in params_spl {
+                    let mut point_s = point_p.split(':');
+                    let point_x = point_s.next().unwrap().parse::<f32>().ok().unwrap();
+                    let point_y = point_s.next().unwrap().parse::<f32>().ok().unwrap();
+                    let point = Point::new(point_x, point_y);
+                    curve_points.push(point);
+                }
+
+                params = HitObjectAdditionalParams::SliderParams(
+                    OsuSliderParams {
+                        curve_type,
+                        curve_points,
+                        slides_count,
+                        length,
+                    }
+                );
+            },
+            Ok(OsuHitObjectType::Spinner) => {
+                error!("Hitobject type spinner not implemented!");
+                continue
+            },
+            Ok(OsuHitObjectType::PerfectCircle) => {
+                error!("Hitobject type perfect circle not implemented!");
+            }
+            Err(_) => panic!("invalid hitobject type!")
+        }
+
+        let hitobject = HitObjectTemplate {
+            id: HitObjectID(line_i as u64),
             timing: Timing(Duration::from_millis(time as u64)),
-            transform: Transform::from_xyz(x, y, 1000.0 - (line_i as f32 / 10.0))
+            position: Transform::from_xyz(x, y, 1000.0 - (line_i as f32 / 10.0)),
+            params
         };
-        circles.push(circle);
+        hitobjects.push(hitobject);
     }
-    trace!("Created {} hitcircle templates successfully", circles.len());
+    trace!("Created {} hitcircle templates successfully", hitobjects.len());
 
     let beatmap = OsuMap {
         loaded: true,
         running_time: Stopwatch::new(),
         current_circle_index: 0,
-        circles,
+        circles: hitobjects,
         beatmap_info,
         beatmap_metadata
     };

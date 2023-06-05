@@ -5,16 +5,13 @@ use bevy_tweening::{Animator, Tween, lens::{SpriteColorLens, TransformScaleLens}
 
 use crate::skin::SkinResources;
 
-use super::SpriteType;
+use super::{SpriteType, HitObject, Timing, HitObjectTemplate};
 
 pub const HITCIRCLE_SIZE: f32 = 150.0;
 pub const HITCIRCLE_FADE_DURATION_MILLIS: u64 = 500;
 
 #[derive(Component, Clone, Copy, Debug)]
-pub struct CircleID(pub u64);
-
-#[derive(Component, Copy, Clone, Debug)]
-pub struct Timing(pub Duration);
+pub struct HitObjectID(pub u64);
 
 #[repr(u64)]
 enum AnimationCompletedType {
@@ -34,54 +31,19 @@ impl TryFrom<u64> for AnimationCompletedType {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct OsuCircleTemplate {
-    pub id: CircleID,
-    pub transform: Transform,
-    pub timing: Timing
-}
-
 #[derive(Bundle)]
 pub struct OsuCircle {
-    pub sprite_type: SpriteType,
-    pub timing: Timing,
-    pub sprite_animator: Animator<Sprite>,
-    pub transform_animator: Animator<Transform>,
-    pub hitcircle_sprite: SpriteBundle,
-    pub id: CircleID,
+    sprite_type: SpriteType,
+    timing: Timing,
+    sprite_animator: Animator<Sprite>,
+    transform_animator: Animator<Transform>,
+    hitcircle_sprite: SpriteBundle
 }
 
-impl OsuCircle {
-    pub fn click_event(
-        cursor: Vec2,
-        mut circle: (&SpriteType, Mut<Transform>, Entity, &Sprite, Mut<Animator<Sprite>>, Mut<Animator<Transform>>, &CircleID),
-    ) -> Result<(), ()> {
-        let x_dif = (cursor.x - circle.1.translation.x).powi(2);
-        let y_dif = (cursor.y - circle.1.translation.y).powi(2);
-        let dist = (x_dif + y_dif).sqrt();
-        if dist < HITCIRCLE_SIZE / 3.0 {
-            trace!("{:?} at ({}, {}) clicked!", circle.0, circle.1.translation.x, circle.1.translation.y);
-            
-            let cur_color = circle.3.color;
-            let fadeout_duration = HITCIRCLE_FADE_DURATION_MILLIS as f32 * cur_color.a() / 4.0;
-            let fadeout = Tween::new(
-                EaseMethod::Linear,
-                Duration::from_millis(fadeout_duration as u64),
-                SpriteColorLens {
-                    start: cur_color,
-                    end: Color::Rgba { red: 1.0, green: 1.0, blue: 1.0, alpha: 0.0 }
-                }
-            ).with_completed_event(AnimationCompletedType::Hidden as u64);
-            circle.4.set_tweenable(fadeout);
-            circle.5.state = AnimatorState::Playing;
-            return Ok(());
-        }
-        return Err(());
-    }
-
-    pub fn new_circle(id: CircleID, temp: OsuCircleTemplate, skin: Res<SkinResources>) -> OsuCircle {
+impl HitObject for OsuCircle {
+    fn new_hitobject(temp: &HitObjectTemplate, skin: Res<SkinResources>) -> OsuCircle {
         let sprite = SpriteBundle {
-            transform: temp.transform,
+            transform: temp.position,
             texture: skin.hitcircle_handle.clone(),
             sprite: Sprite {
                 custom_size: Some(Vec2::new(150.0, 150.0)),
@@ -126,9 +88,37 @@ impl OsuCircle {
             timing: temp.timing,
             sprite_animator: Animator::new(seq),
             transform_animator: Animator::new(scaleup).with_state(bevy_tweening::AnimatorState::Paused),
-            hitcircle_sprite: sprite,
-            id,
+            hitcircle_sprite: sprite
         }
+    }
+}
+
+impl OsuCircle {
+    pub fn click_event(
+        cursor: Vec2,
+        mut circle: (&SpriteType, Mut<Transform>, Entity, &Sprite, Mut<Animator<Sprite>>, Mut<Animator<Transform>>, &HitObjectID),
+    ) -> Result<(), ()> {
+        let x_dif = (cursor.x - circle.1.translation.x).powi(2);
+        let y_dif = (cursor.y - circle.1.translation.y).powi(2);
+        let dist = (x_dif + y_dif).sqrt();
+        if dist < HITCIRCLE_SIZE / 3.0 {
+            trace!("{:?} at ({}, {}) clicked!", circle.0, circle.1.translation.x, circle.1.translation.y);
+            
+            let cur_color = circle.3.color;
+            let fadeout_duration = HITCIRCLE_FADE_DURATION_MILLIS as f32 * cur_color.a() / 4.0;
+            let fadeout = Tween::new(
+                EaseMethod::Linear,
+                Duration::from_millis(fadeout_duration as u64),
+                SpriteColorLens {
+                    start: cur_color,
+                    end: Color::Rgba { red: 1.0, green: 1.0, blue: 1.0, alpha: 0.0 }
+                }
+            ).with_completed_event(AnimationCompletedType::Hidden as u64);
+            circle.4.set_tweenable(fadeout);
+            circle.5.state = AnimatorState::Playing;
+            return Ok(());
+        }
+        return Err(());
     }
 
     pub fn hitcircle_shown(
@@ -141,7 +131,7 @@ impl OsuCircle {
             let anim_type: AnimationCompletedType = event.user_data.try_into().expect("Invalid AnimationCompletedType!");
             for query_s in query.iter() {
                 if object == query_s.0 {
-                    if let SpriteType::Hitcircle(CircleID(_circle)) = query_s.1 {
+                    if let SpriteType::Hitcircle(HitObjectID(_circle)) = query_s.1 {
                         match anim_type {
                             AnimationCompletedType::Shown => (),
                             AnimationCompletedType::Hidden => {
