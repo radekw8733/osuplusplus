@@ -16,6 +16,7 @@ utf8-read= "0.4.0"
 zip = { version = "0.6.6", features = ["bzip2", "zstd"] }
 glob = "0.3.1"
 bevy_tweening = "0.7.0"
+bevy_kira_audio = { version= "0.15.0", features = ["mp3", "wav", "ogg"] }
 lyon_geom = "1.0.4"
 
 [dependencies.bevy]
@@ -23,7 +24,6 @@ version = "0.10.1"
 default-features = false
 features = [
     "bevy_asset",
-    "bevy_audio",
     "bevy_winit",
     "bevy_core_pipeline",
     "bevy_render",

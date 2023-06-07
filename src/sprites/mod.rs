@@ -4,7 +4,7 @@ use bevy::prelude::{Component, Res, Transform};
 
 use crate::skin::SkinResources;
 
-use self::{hitcircle::HitObjectID, slider::OsuSliderParams};
+use self::slider::OsuSliderParams;
 
 pub mod hitcircle;
 pub mod slider;
@@ -12,10 +12,13 @@ pub mod background;
 
 #[derive(Component, Debug)]
 pub enum SpriteType {
-    Hitcircle(HitObjectID),
-    Slider(HitObjectID),
+    Hitcircle,
+    Slider,
     Background,
 }
+
+#[derive(Component, Clone, Copy, Debug)]
+pub struct HitObjectID(pub u64);
 
 pub enum OsuHitObjectType {
     HitCircle = 1,
@@ -41,11 +44,15 @@ impl TryFrom<u32> for OsuHitObjectType {
 #[derive(Component, Copy, Clone, Debug)]
 pub struct Timing(pub Duration);
 
+#[derive(Component, Copy, Clone, Debug)]
+pub struct HitSoundRaw(pub u8);
+
 #[derive(Component, Clone, Debug)]
 pub struct HitObjectTemplate {
     pub id: HitObjectID,
     pub position: Transform,
     pub timing: Timing,
+    pub hitsound: HitSoundRaw,
     pub params: HitObjectAdditionalParams,
     // pub hitsample: HitSample
 }

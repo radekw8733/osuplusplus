@@ -48,6 +48,35 @@ pub fn find_single(pattern: &str) -> Result<PathBuf, &'static str> {
     return Err("file not found!");
 }
 
+pub fn find_single_dir(pattern: &str) -> Result<PathBuf, &'static str> {
+    for entry in glob(pattern).expect("Invalid glob pattern!") {
+        match entry {
+            Ok(path) => {
+                if path.is_dir() {
+                    return Ok(path);
+                }
+            },
+            Err(_) => ()
+        }
+    }
+    return Err("file not found!");
+}
+
+// pub fn find_all(pattern: &str) -> Option<Vec<PathBuf>> {
+//     let mut paths: Vec<PathBuf> = Vec::new();
+//     for entry in glob(pattern).expect("Invalid glob pattern!") {
+//         match entry {
+//             Ok(path) => paths.push(path),
+//             Err(e) => ()
+//         }
+//     };
+    
+//     match paths.is_empty() {
+//         false => Some(paths),
+//         true => None
+//     }
+// }
+
 pub fn extract_archive(src: &PathBuf, dst: &PathBuf) -> Result<(), String> {
     let file = match fs::File::open(src) {
         Ok(file) => file,

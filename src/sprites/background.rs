@@ -1,6 +1,4 @@
-use bevy::{sprite::{SpriteBundle, Sprite}, prelude::{Bundle, Res, Transform}};
-
-use crate::skin::SkinResources;
+use bevy::{sprite::{SpriteBundle, Sprite}, prelude::{Transform, Image, Handle, Bundle}};
 
 use super::SpriteType;
 
@@ -11,14 +9,14 @@ pub struct Background {
 }
 
 impl Background {
-    pub fn setup_background(skin: Res<SkinResources>) -> Background {
+    pub fn set_background(image: &Handle<Image>, offset: Transform) -> Background {
         let sprite = SpriteBundle {
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            transform: offset,
             sprite: Sprite {
                 color: bevy::prelude::Color::RgbaLinear { red: 0.3, green: 0.3, blue: 0.3, alpha: 1.0 },
                 ..Default::default()
             },
-            texture: skin.background_handle.clone(),
+            texture: image.clone(),
             ..Default::default()
         };
         Background {
