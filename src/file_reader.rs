@@ -62,20 +62,20 @@ pub fn find_single_dir(pattern: &str) -> Result<PathBuf, &'static str> {
     return Err("file not found!");
 }
 
-// pub fn find_all(pattern: &str) -> Option<Vec<PathBuf>> {
-//     let mut paths: Vec<PathBuf> = Vec::new();
-//     for entry in glob(pattern).expect("Invalid glob pattern!") {
-//         match entry {
-//             Ok(path) => paths.push(path),
-//             Err(e) => ()
-//         }
-//     };
+pub fn find_all(pattern: &str) -> Option<Vec<PathBuf>> {
+    let mut paths: Vec<PathBuf> = Vec::new();
+    for entry in glob(pattern).expect("Invalid glob pattern!") {
+        match entry {
+            Ok(path) => paths.push(path),
+            Err(_) => ()
+        }
+    };
     
-//     match paths.is_empty() {
-//         false => Some(paths),
-//         true => None
-//     }
-// }
+    match paths.is_empty() {
+        false => Some(paths),
+        true => None
+    }
+}
 
 pub fn extract_archive(src: &PathBuf, dst: &PathBuf) -> Result<(), String> {
     let file = match fs::File::open(src) {

@@ -1,10 +1,10 @@
-use std::{time::Duration, fs::{self, create_dir_all}, path::PathBuf, io::ErrorKind};
+use std::{time::Duration, fs::{self, create_dir_all, ReadDir}, path::PathBuf, io::ErrorKind};
 
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_kira_audio::{AudioChannel, AudioControl, AudioInstance};
 use lyon_geom::Point;
 
-use crate::{sprites::{Timing, HitObjectTemplate, HitObjectAdditionalParams, OsuHitObjectType, slider::{OsuSliderParams, OsuSliderCurveType}, HitSoundRaw, HitObjectID, background::Background}, file_reader::{self, extract_archive}, GameState, GameStateEnum, audio::BeatmapMusicChannel};
+use crate::{sprites::{Timing, HitObjectTemplate, HitObjectAdditionalParams, OsuHitObjectType, slider::{OsuSliderParams, OsuSliderCurveType}, HitSoundRaw, HitObjectID, background::Background, SpriteType}, file_reader::{self, extract_archive}, GameState, GameStateEnum, audio::BeatmapMusicChannel};
 
 const OSUPIXELS_WIDTH: f32 = 640.0;
 const OSUPIXELS_HEIGHT: f32 = 480.0;
@@ -15,12 +15,12 @@ const BEATMAP_EVENTS_HEADER: &'static str = "[Events]";
 const BEATMAP_HITOBJECT_HEADER: &'static str = "[HitObjects]";
 
 #[derive(Component, Default, Debug)]
-pub struct OsuMapInfo {
+pub struct OsuBeatmapInfo {
     pub audio_filename: String
 }
 
 #[derive(Component, Default, Debug)]
-pub struct OsuMapMetadata {
+pub struct OsuBeatmapMetadata {
     pub title: String,
     pub title_u: String,
     pub artist: String,
@@ -30,96 +30,107 @@ pub struct OsuMapMetadata {
     pub source: String,
     pub tags: String,
     pub beatmap_id: u32,
-    pub beatmapset_id: u32
+    pub beatmapset_id: u32,
+    pub path: PathBuf
 }
 
 #[derive(Component, Debug)]
-pub struct OsuMap {
+pub struct OsuBeatmap {
     pub loaded: bool,
     pub running_time: Stopwatch,
     pub current_circle_index: usize,
     pub circles: Vec<HitObjectTemplate>,
     pub audio_handle: Handle<AudioInstance>,
-    pub beatmap_info: OsuMapInfo,
-    pub beatmap_metadata: OsuMapMetadata
+    pub beatmap_info: OsuBeatmapInfo,
+    pub beatmap_metadata: OsuBeatmapMetadata
 }
+
+pub struct OsuBeatmapPacksBriefed(pub Vec<OsuBeatmapMetadata>, pub PathBuf);
 
 #[derive(Resource)]
-pub struct CurrentOsuMap(pub OsuMap);
+pub struct OsuBeatmapPacksBriefedLoaded(pub Vec<OsuBeatmapPacksBriefed>);
 
-pub fn load_first_avail_beatmap(
-    mut commands: Commands,
-    mut state: ResMut<GameState>,
-    audio: Res<AudioChannel<BeatmapMusicChannel>>,
-    asset_server: Res<AssetServer>
-) {
-    fn no_beatmap_msg() {
-        warn!("No maps found in assets/maps! Load them by dragging zip to game window or manually unzip .osz to game folder");
-    }
-    let mut beatmap_path = PathBuf::new();
-    let beatmap_folders = match fs::read_dir("assets/maps/") {
-        Ok(dir) => dir,
-        Err(e) => {
-            if let ErrorKind::NotFound = e.kind() {
+#[derive(Resource)]
+pub struct CurrentOsuBeatmap(pub OsuBeatmap);
+
+pub struct MapLoadingWanted(pub PathBuf);
+
+// pub fn load_first_avail_beatmap(
+//     mut state: ResMut<GameState>,
+//     mut map_event: EventWriter<MapLoadingWanted>
+// ) {
+//     fn no_beatmap_msg() {
+//         warn!("No maps found in assets/maps! Load them by dragging zip to game window or manually unzip .osz to game folder");
+//     }
+//     let mut beatmap_path = PathBuf::new();
+//     let beatmap_folders = match get_beatmaps_folder() {
+//         Ok(dir) => dir,
+//         Err(e) => {
+//             error!("{}", e);
+//             return
+//         }
+//     };
+//     debug!("Beatmaps folder in game folder found");
+//     debug!("Searching for folders in beatmaps folder...");
+//     for beatmap_folder in beatmap_folders {
+//         match beatmap_folder {
+//             Ok(entry) => {
+//                 trace!("{:?}", entry);
+//                 let mut entry_path = entry.path().to_path_buf();
+//                 entry_path.push("*.osu");
+//                 beatmap_path = match file_reader::find_single(entry_path.to_str().unwrap()) {
+//                     Ok(path) => {
+//                         debug!("Found beatmap main file at {:?}", path);
+//                         path
+//                     },
+//                     Err(_) => {
+//                         no_beatmap_msg();
+//                         return
+//                     }
+//                 }
+//             },
+//             Err(_) => {
+//                 no_beatmap_msg();
+//                 return
+//             }
+//         }
+//     }
+//     if beatmap_path.to_str().unwrap().is_empty() {
+//         no_beatmap_msg();
+//     }
+//     else {
+//         map_event.send(MapLoadingWanted(beatmap_path));
+//     }
+// }
+
+fn get_beatmaps_folder() -> Result<ReadDir, std::io::Error> {
+    return match fs::read_dir("assets/maps/") {
+        Ok(dir) => Ok(dir),
+        Err(e) => match e.kind() {
+            ErrorKind::NotFound => {
                 warn!("{:?}", create_dir_all("assets/maps"));
-            }
-            error!("{}", e);
-            return
-        }
-    };
-    debug!("Beatmaps folder in game folder found");
-    debug!("Searching for folders in beatmaps folder...");
-    for beatmap_folder in beatmap_folders {
-        match beatmap_folder {
-            Ok(entry) => {
-                trace!("{:?}", entry);
-                let mut entry_path = entry.path().to_path_buf();
-                entry_path.push("*.osu");
-                beatmap_path = match file_reader::find_single(entry_path.to_str().unwrap()) {
-                    Ok(path) => {
-                        debug!("Found beatmap main file at {:?}", path);
-                        path
-                    },
-                    Err(_) => {
-                        no_beatmap_msg();
-                        return
-                    }
-                }
+                get_beatmaps_folder()
             },
-            Err(_) => {
-                no_beatmap_msg();
-                return
-            }
+            e => Err(e.into())
         }
     }
-    if beatmap_path.to_str().unwrap().is_empty() {
-        no_beatmap_msg();
-    }
-    else {
-        load_beatmap(&mut commands, beatmap_path, &audio, &asset_server)
-    }
-    state.0 = GameStateEnum::Playing;
 }
 
-pub fn load_beatmap(commands: &mut Commands,
-    beatmap_path: PathBuf,
-    audio: &Res<AudioChannel<BeatmapMusicChannel>>,
-    asset_server: &Res<AssetServer>
-) {
-    debug!("Loading beatmap from {:?}", beatmap_path);
-    let beatmap_root = beatmap_path.parent().unwrap().canonicalize().ok().unwrap();
-    let beatmap = match file_reader::load_file(beatmap_path.clone()) {
+fn load_beatmap_file(beatmap_path: PathBuf) -> Result<Vec<String>, &'static str> {
+    let beatmap = match file_reader::load_file(beatmap_path) {
         Ok(f) => f,
         Err(_) => {
-            error!("Invalid beatmap file path!");
-            return;
+            let error = "Invalid beatmap file path!";
+            error!(error);
+            return Err(error);
         }
     };
-    debug!("Beatmap file loading successful");
+    Ok(beatmap)
+}
 
-    trace!("Loading beatmap general info");
+fn load_beatmap_general_info(beatmap: &Vec<String>) -> OsuBeatmapInfo {
     let beatmap_info_section = file_reader::get_section(&beatmap, BEATMAP_GENERAL_INTO_HEADER);
-    let mut beatmap_info = OsuMapInfo::default();
+    let mut beatmap_info = OsuBeatmapInfo::default();
     for line in beatmap_info_section.iter() {
         let mut line = line.split(':');
 
@@ -131,12 +142,12 @@ pub fn load_beatmap(commands: &mut Commands,
             _ => () // TODO - more info to parse
         }
     }
-    trace!("Beatmap general info loaded successfully");
-    trace!("{:#?}", beatmap_info);
+    beatmap_info
+}
 
-    trace!("Loading beatmap metadata");
+fn load_beatmap_metadata(beatmap: &Vec<String>) -> OsuBeatmapMetadata {
     let beatmap_metadata_section = file_reader::get_section(&beatmap, BEATMAP_METADATA_HEADER);
-    let mut beatmap_metadata = OsuMapMetadata::default();
+    let mut beatmap_metadata = OsuBeatmapMetadata::default();
     for line in beatmap_metadata_section.iter() {
         let mut line = line.split(':');
 
@@ -157,10 +168,59 @@ pub fn load_beatmap(commands: &mut Commands,
             _ => ()
         }
     }
-    trace!("Beatmap metadata loaded successfully");
+    beatmap_metadata
+}
+
+pub fn load_beatmap(
+    mut commands: Commands,
+    sprites: Query<Entity, With<SpriteType>>,
+    audio: Res<AudioChannel<BeatmapMusicChannel>>,
+    asset_server: Res<AssetServer>,
+    mut event_receiver: EventReader<MapLoadingWanted>,
+    mut game_state: ResMut<GameState>
+) {
+    for event in event_receiver.iter() {
+        if let Err(e) = load_beatmap_with_result(&mut commands, event.0.clone(), &sprites, &audio, &asset_server, &mut game_state) {
+            error!("{}", e);
+        }
+    }
+}
+
+pub fn load_beatmap_with_result(
+    commands: &mut Commands,
+    beatmap_path: PathBuf,
+    sprites: &Query<Entity, With<SpriteType>>,
+    audio: &Res<AudioChannel<BeatmapMusicChannel>>,
+    asset_server: &Res<AssetServer>,
+    game_state: &mut ResMut<GameState>
+) -> Result<(), &'static str> {
+    if let GameStateEnum::Playing = game_state.0 {
+        debug!("Stopping previous beatmap");
+        audio.stop();
+        game_state.0 = GameStateEnum::NothingPlaying;
+
+        for sprite in sprites {
+            commands.entity(sprite).despawn();
+        }
+    }
+
+    let beatmap_root = beatmap_path.parent().unwrap().canonicalize().ok().unwrap();
+
+    debug!("Loading beatmap from {:?}", beatmap_path);
+    let beatmap = load_beatmap_file(beatmap_path.clone())?;
+    debug!("Beatmap file loading successful");
+
+    debug!("Loading beatmap general info");
+    let beatmap_info = load_beatmap_general_info(&beatmap);
+    debug!("Beatmap general info loaded successfully");
+    trace!("{:#?}", beatmap_info);
+
+    debug!("Loading beatmap metadata");
+    let beatmap_metadata = load_beatmap_metadata(&beatmap);
+    debug!("Beatmap metadata loaded successfully");
     trace!("{:#?}", beatmap_metadata);
 
-    trace!("Loading beatmap events");
+    debug!("Loading beatmap events");
     let beatmap_events_section = file_reader::get_section(&beatmap, BEATMAP_EVENTS_HEADER);
     for line in beatmap_events_section.iter() {
         if !line.starts_with("//") {
@@ -181,9 +241,9 @@ pub fn load_beatmap(commands: &mut Commands,
             }
         }
     }
-    trace!("Beatmap events loaded successfully");
+    debug!("Beatmap events loaded successfully");
 
-    trace!("Creating hitcircle templates");
+    debug!("Creating hitcircle templates");
     let mut hitobjects: Vec<HitObjectTemplate> = Vec::new();
     let hitobjects_section = file_reader::get_section(&beatmap, BEATMAP_HITOBJECT_HEADER);
     for (line_i, line) in hitobjects_section.iter().enumerate() {
@@ -271,13 +331,13 @@ pub fn load_beatmap(commands: &mut Commands,
         };
         hitobjects.push(hitobject);
     }
-    trace!("Created {} hitcircle templates successfully", hitobjects.len());
+    debug!("Created {} hitcircle templates successfully", hitobjects.len());
 
     let audio_handle = audio.play(
         asset_server.load(beatmap_root.join(&beatmap_info.audio_filename))
     ).handle();
 
-    let beatmap = OsuMap {
+    let mut beatmap = OsuBeatmap {
         loaded: true,
         running_time: Stopwatch::new(),
         current_circle_index: 0,
@@ -286,17 +346,20 @@ pub fn load_beatmap(commands: &mut Commands,
         beatmap_info,
         beatmap_metadata
     };
+    beatmap.beatmap_metadata.path = beatmap_path.clone();
     debug!("Beatmap loading successful");
-    info!("Playing beatmap: {} - {}", beatmap.beatmap_metadata.artist, beatmap.beatmap_metadata.title);
 
-    commands.insert_resource(CurrentOsuMap(beatmap));
+    info!("Playing beatmap: {} - {}", beatmap.beatmap_metadata.artist, beatmap.beatmap_metadata.title);
+    game_state.0 = GameStateEnum::Playing;
+    commands.insert_resource(CurrentOsuBeatmap(beatmap));
+
+    Ok(())
 }
 
 pub fn load_dnd_beatmap_archive(
     mut commands: Commands,
     mut dnd_events: EventReader<FileDragAndDrop>,
-    audio: Res<AudioChannel<BeatmapMusicChannel>>,
-    asset_server: Res<AssetServer>,
+    mut map_event: EventWriter<MapLoadingWanted>
 ) {
     for ev in dnd_events.iter() {
         if let FileDragAndDrop::DroppedFile { window: _, path_buf } = ev {
@@ -312,13 +375,74 @@ pub fn load_dnd_beatmap_archive(
                     beatmap_file_pattern.push("*.osu");
                     let beatmap_file = file_reader::find_single(beatmap_file_pattern.to_str().unwrap());
                     match beatmap_file {
-                        Ok(path) => load_beatmap(&mut commands, path, &audio, &asset_server),
+                        Ok(path) => {
+                            commands.remove_resource::<OsuBeatmapPacksBriefedLoaded>();
+                            commands.init_resource::<OsuBeatmapPacksBriefedLoaded>();
+                            map_event.send(MapLoadingWanted(path));
+                        },
                         Err(e) => error!("{}", e)
-                    }
+                    };
                 },
                 Err(e) => error!("{}", e)
             };
-            
         }
     }
+}
+
+impl FromWorld for OsuBeatmapPacksBriefedLoaded {
+    fn from_world(_world: &mut World) -> Self {
+        fn no_beatmap_msg() {
+            warn!("No maps found in assets/maps! Load them by dragging zip to game window or manually unzip .osz to game folder");
+        }
+        let mut beatmaps: Vec<OsuBeatmapPacksBriefed> = Vec::new();
+        let beatmap_folders = match get_beatmaps_folder() {
+            Ok(dir) => dir,
+            Err(e) => {
+                error!("{}", e);
+                return OsuBeatmapPacksBriefedLoaded(Vec::new())
+            }
+        };
+        debug!("Beatmaps folder in game folder found");
+        debug!("Searching for folders in beatmaps folder...");
+        for beatmap_folder in beatmap_folders {
+            match beatmap_folder {
+                Ok(entry) => {
+                    trace!("{:?}", entry);
+                    let mut entry_path = entry.path().to_path_buf();
+                    entry_path.push("*.osu");
+                    beatmaps.push(match file_reader::find_all(entry_path.to_str().unwrap()) {
+                        Some(beatmap_version_paths) => {
+                            debug!("Found {} beatmap versions", beatmap_version_paths.len());
+                            let mut beatmap_versions: Vec<OsuBeatmapMetadata> = Vec::new();
+                            for beatmap_version_path in beatmap_version_paths.clone() {
+                                match get_briefed_beatmap(beatmap_version_path.clone()) {
+                                    Ok(meta) => {
+                                        trace!("{:?}", meta);
+                                        let mut meta = meta;
+                                        meta.path = beatmap_version_path;
+                                        beatmap_versions.push(meta);
+                                    },
+                                    Err(_) => ()
+                                };
+                            };
+                            let beatmap_pack_path = beatmap_version_paths[0].parent().unwrap().to_path_buf();
+                            let beatmap_pack = OsuBeatmapPacksBriefed(beatmap_versions, beatmap_pack_path);
+                            beatmap_pack
+                        },
+                        None => OsuBeatmapPacksBriefed(Vec::<OsuBeatmapMetadata>::new(), PathBuf::new())
+                    });
+                },
+                Err(_) => {
+                    no_beatmap_msg();
+                    return OsuBeatmapPacksBriefedLoaded(Vec::new())
+                }
+            }
+        }
+        OsuBeatmapPacksBriefedLoaded(beatmaps)
+    }
+}
+
+fn get_briefed_beatmap(beatmap_path: PathBuf) -> Result<OsuBeatmapMetadata, &'static str> {
+    let beatmap = load_beatmap_file(beatmap_path)?;
+    Ok(load_beatmap_metadata(&beatmap))
 }

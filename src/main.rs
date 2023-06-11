@@ -1,14 +1,14 @@
-use std::time::Duration;
-
 use audio::{HitObjectSoundChannel, BeatmapMusicChannel};
 #[allow(unused_imports)]
 #[cfg(all(debug_assertions, not(target_arch = "wasm32")))] // disable linking on WASM and release builds
 use bevy_dylib;
 use bevy::{prelude::*, input::{mouse::MouseButtonInput, ButtonState}, window::{PrimaryWindow, PresentMode}, log::LogPlugin};
-use bevy_kira_audio::{AudioPlugin, AudioChannel, AudioApp, AudioInstance, PlaybackState, AudioTween};
+use bevy_egui::EguiPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_kira_audio::{AudioPlugin, AudioChannel, AudioApp};
 use bevy_tweening::{TweeningPlugin, Animator};
-use map::CurrentOsuMap;
-use sprites::{hitcircle::OsuCircle, SpriteType, HitObject, HitSoundRaw, HitObjectID};
+use map::OsuBeatmapPacksBriefedLoaded;
+use sprites::{hitcircle::OsuCircle, SpriteType, HitSoundRaw, HitObjectID};
 use skin::SkinResources;
 
 mod audio;
@@ -16,11 +16,13 @@ mod sprites;
 mod skin;
 mod map;
 mod file_reader;
+mod ui;
+mod game_loop;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
 pub enum GameStateEnum {
     #[default]
-    NotLoaded,
+    NothingPlaying,
     Playing,
     Paused,
 }
@@ -43,17 +45,22 @@ fn main() {
             }),
             ..Default::default()
         }))
+        .add_plugin(EguiPlugin)
+        .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(TweeningPlugin)
         .add_plugin(AudioPlugin)
+        .add_event::<map::MapLoadingWanted>()
+        .init_resource::<OsuBeatmapPacksBriefedLoaded>()
         .init_resource::<SkinResources>()
         .init_resource::<GameState>()
         .add_audio_channel::<BeatmapMusicChannel>()
         .add_audio_channel::<HitObjectSoundChannel>()
         .add_startup_system(setup)
-        .add_startup_system(map::load_first_avail_beatmap.after(setup))
         .add_system(mouse_click_event)
+        .add_system(map::load_beatmap)
         .add_system(map::load_dnd_beatmap_archive)
-        .add_system(running_map_loop.after(map::load_first_avail_beatmap))
+        .add_system(ui::display_loader_window)
+        .add_system(game_loop::main_loop)
         .add_system(OsuCircle::hitcircle_shown)
         .run();
 }
@@ -88,44 +95,6 @@ fn mouse_click_event(
                         break
                     }
                 }
-            }
-        }
-    }
-}
-
-fn running_map_loop(
-    mut commands: Commands,
-    skin: Res<SkinResources>,
-    time: Res<Time>,
-    game_state: Res<GameState>,
-    mut audio_assets: ResMut<Assets<AudioInstance>>,
-    map: Option<ResMut<CurrentOsuMap>>
-) {
-    if map.is_some() {
-        let map = &mut map.unwrap().0;
-
-        if audio_assets.get(&map.audio_handle).is_some() {
-            let music = audio_assets.get_mut(&map.audio_handle).unwrap();
-
-            match game_state.0 {
-                GameStateEnum::Playing => {
-                    map.running_time.tick(time.delta());
-                    if map.running_time.elapsed() >= map.circles[map.current_circle_index].timing.0 {
-                        let circle = OsuCircle::new_hitobject(&map.circles[map.current_circle_index], skin);
-                        map.current_circle_index += 1;
-                        commands.spawn(circle);
-                    }
-
-                    if let PlaybackState::Paused { position: _ } = music.state() {
-                        music.resume(AudioTween::linear(Duration::ZERO));
-                    }
-                },
-                GameStateEnum::Paused => {
-                    if let PlaybackState::Playing { position: _ } = music.state() {
-                        music.pause(AudioTween::linear(Duration::ZERO));
-                    }
-                },
-                _ => ()
             }
         }
     }
